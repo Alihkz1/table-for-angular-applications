@@ -1,15 +1,65 @@
+.table-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    position: relative;
+}
+
+.table {
+    width: auto;
+    min-width: 100%;
+    margin: 0;
+    table-layout: fixed;
+}
+
 thead {
     position: sticky;
     top: 0;
+    z-index: 10;
 }
 
 th {
-    background: #8e8e8e;
+    background: #415bde;
     font-size: 14px;
     color: white;
     border-right: 1px solid #b5b5b5;
-    min-width: 200px;
+    min-width: 100px;
     height: 55px;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    transition: background-color 0.3s ease;
+    cursor: grab;
+
+    &:hover {
+        cursor: grab;
+    }
+
+    &.drag-over-left {
+        border-left: 1px solid #7499ff !important;
+        box-shadow: inset 3px 0 0 #7499ff;
+    }
+
+    &.drag-over-right {
+        border-right: 1px solid #7499ff !important;
+        box-shadow: inset -3px 0 0 #7499ff;
+    }
+
+    .header-content {
+        cursor: grab;
+
+        &:active {
+            cursor: grabbing;
+        }
+    }
+}
+
+.drag-ghost {
+    color: white !important;
+    cursor: grabbing !important;
+    font-size: 14px !important;
 }
 
 tbody {
@@ -18,6 +68,7 @@ tbody {
 
 .cell {
     border-right: 1px solid #b5b5b5;
+    height: 100%;
 }
 
 ::ng-deep .popover-body {
@@ -50,7 +101,6 @@ tbody {
     }
 }
 
-/* @todo: refactor loading styles */
 .loading-container {
     display: flex;
     justify-content: center;
@@ -113,8 +163,72 @@ tbody {
     height: 100%;
     width: 6px !important;
     cursor: ew-resize;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 10;
+
+    &:hover,
+    &:active {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
 }
 
 .table> :not(caption)>*>* {
     padding: 0 0 0 5px !important;
+}
+
+
+.dynamic-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+
+.row-dragging {
+    opacity: 0.3;
+}
+
+.drag-over-above {
+    border-top: 2px solid #7499ff !important;
+}
+
+.drag-over-below {
+    border-bottom: 2px solid #7499ff !important;
+}
+
+.drag-handle-column {
+    width: 40px;
+    min-width: 40px;
+    cursor: default;
+}
+
+.drag-handle-cell {
+    width: 40px;
+    min-width: 40px;
+    cursor: grab;
+    text-align: center;
+    background: #f8f9fa;
+
+    &:hover {
+        background: #e9ecef;
+    }
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+.row-drag-ghost {
+    background: #ffffff !important;
+    border-collapse: collapse;
+
+    td {
+        background: #ffffff !important;
+        border: 1px solid #dee2e6 !important;
+    }
+
 }

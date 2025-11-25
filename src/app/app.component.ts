@@ -4,11 +4,9 @@ import { MOCK_DATA } from './shared/mock-data.json';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { IHeader } from './shared/model/IHeader.interface';
 import { SharedService } from './shared/service/shared.service';
-import { DEFAULT_END_DATE, DEFAULT_START_DATE } from './shared/constant/date.const';
 import { CommonModule, DatePipe } from '@angular/common';
 import { EmployeeNameCellComponent } from './dynamic-cells/employee-name-cell/employee-name-cell.component';
 import { IRowEvent } from './shared/model/IRowEvent.interface';
-import { ShiftCellComponent } from './dynamic-cells/shift-cell/shift-cell.component';
 import { CdkAccordionModule } from '@angular/cdk/accordion';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
@@ -84,7 +82,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  @HostListener('document:mouseup', ['$event'])
+  @HostListener('document:mouseup')
   onMouseUp() {
     if (this.resizing) {
       this.resizing = false;
@@ -132,8 +130,6 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.initHeaders();
     this.getData();
-    this.getPositions();
-    this.toggleChangeListener();
     this.redColumnWidthListener();
   }
 
@@ -146,81 +142,6 @@ export class AppComponent implements OnInit {
         splitter.style['max-width'] = `${width}px`;
       }
     });
-  }
-
-  private toggleChangeListener() {
-    this._toggle$.subscribe((index: PROGRAMMED_TABLE_ENUM) => {
-      let headers: IHeader[] = [];
-      switch (index) {
-        case PROGRAMMED_TABLE_ENUM.SHIFT:
-          this.getShifts({ PositionList: JSON.stringify(this.positionsFormControl.value) });
-          headers = [
-            {
-              key: 'Date',
-              title: 'Shift Name',
-              className: 'down-column'
-            },
-            {
-              key: 'Date',
-              title: 'Shift Name'
-            }
-          ]
-          break;
-        case PROGRAMMED_TABLE_ENUM.BLOCK:
-          this.getBlocks({ PositionList: JSON.stringify(this.positionsFormControl.value) });
-          headers = [
-            {
-              key: 'BlockName',
-              title: 'Block Name',
-              className: 'down-column'
-            },
-            {
-              key: 'BlockName',
-              title: 'Block Name',
-            },
-          ]
-          break;
-        case PROGRAMMED_TABLE_ENUM.HORUS:
-          this.getIntervals({ PositionList: JSON.stringify(this.positionsFormControl.value) });
-          headers = [
-            {
-              key: 'intervalName',
-              title: 'Intervals',
-              className: 'down-column'
-            },
-            {
-              key: 'intervalName',
-              title: 'Intervals'
-            }
-          ]
-          break;
-      }
-      this._programmedHeaders$.next(headers)
-    })
-  }
-
-  private getPositions() {
-    this.sharedService.getPositions().subscribe((list: any[]) => {
-      this.positions = list
-    })
-  }
-
-  private getBlocks(model: any) {
-    this.sharedService.getBlocks(model).subscribe((list: any[]) => {
-      this._programmedDataSource$.next(list);
-    })
-  }
-
-  private getShifts(model: any) {
-    this.sharedService.getShifts(model).subscribe((list: any[]) => {
-      this._programmedDataSource$.next(list);
-    })
-  }
-
-  private getIntervals(model: any) {
-    this.sharedService.getIntervals(model).subscribe((list: any[]) => {
-      this._programmedDataSource$.next(list);
-    })
   }
 
   public table_onRowEvent(event: IRowEvent): void {
@@ -239,11 +160,6 @@ export class AppComponent implements OnInit {
 
   getData() {
     this.initMockData();
-    // this.mockDataLoading = true;
-    // this.dataLoading = this.sharedService.getWorkCalender().subscribe((data) => {
-    //   this.mockDataLoading = false;
-    //   this._dataSource$.next(data);
-    // });
   }
 
   initMockData() {
@@ -270,7 +186,7 @@ export class AppComponent implements OnInit {
   initDefaultHeaders() {
     this.headers = [
       {
-        title: 'RN Name',
+        title: 'COL 1',
         key: 'FullName',
         dynamicCellComponent: EmployeeNameCellComponent,
         filterable: true,
@@ -278,43 +194,19 @@ export class AppComponent implements OnInit {
         width: 250,
       },
       {
-        title: 'Trainee',
+        title: 'COL 2',
         key: 'EligibilityToBeTrainee',
         filterable: true,
         sortable: true,
         width: 150
       },
       {
-        title: 'RN Tier',
+        title: 'COL 3',
         key: 'RnTierTitle',
         filterable: true,
         sortable: true,
         width: 250,
-        className: 'red-splitter'
       },
     ];
-    const dates = [];
-    let startDay = new Date(DEFAULT_START_DATE);
-    let endDay = new Date(DEFAULT_END_DATE);
-    while (startDay < endDay) {
-      dates.push(this.datePipe.transform(startDay, 'EEE MM/dd/yyyy'));
-      startDay = new Date(
-        startDay.getFullYear(),
-        startDay.getMonth(),
-        startDay.getDate() + 1,
-        0,
-        0,
-        0
-      );
-    }
-    dates.forEach((el, i) => {
-      this.headers.push({
-        key: 'day' + (i + 1),
-        title: el ?? '',
-        sortable: true,
-        width: 250,
-        dynamicCellComponent: ShiftCellComponent
-      });
-    })
   }
 }

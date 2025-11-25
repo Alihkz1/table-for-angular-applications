@@ -1,54 +1,5 @@
-<div class="w-100 d-flex flex-column align-items-center h-100 px-3" (mousemove)="resize_onEvent($event)">
-  <mat-drawer-container [hasBackdrop]="false" class="w-100" [style.height.px]="topDivInitialHeight">
-    <mat-drawer #drawer [mode]="'side'" class="drawer">
-      <div class="w-100 h-100">
-
-      </div>
-    </mat-drawer>
-    <mat-drawer-content>
-      <schedule-table [class.overflow-y-hidden]="mockDataLoading" class="w-100 overflow-hidden" [dataSource]="dataSource"
-        [headers]="headers" [loading]="mockDataLoading" (onRowEvent)="table_onRowEvent($event)">
-      </schedule-table>
-    </mat-drawer-content>
-  </mat-drawer-container>
-
-  <div class="resize"></div>
-  <cdk-accordion [class.accordion-expanded]="accordionItem.expanded" [style.height.px]="bottomDivInitialHeight">
-    <cdk-accordion-item #accordionItem="cdkAccordionItem" role="button" [attr.aria-expanded]="expanded">
-      <div class="h-100 d-flex flex-column overflow-hidden">
-        <div class="w-100 d-flex justify-content-between">
-          <div class="buttons ms-2">
-            <button class="normal-button" [class.primary-button]="selectedToggle === 0"
-              (click)="toggle_onClick(0);">Shift</button>
-            <button class="normal-button" [class.primary-button]="selectedToggle === 1"
-              (click)="toggle_onClick(1);">Block</button>
-            <button class="normal-button" [class.primary-button]="selectedToggle === 2"
-              (click)="toggle_onClick(2);">Hours</button>
-          </div>
-          <div class="mt-2">
-            <mat-form-field>
-              <mat-label>Position</mat-label>
-              <mat-select [formControl]="positionsFormControl" multiple>
-                @for (position of positions; track position) {
-                <mat-option [value]="position.PositionID">{{ position.PositionName }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div>
-            <button class="primary-button mx-2" (click)="apply_onClick();">Apply</button>
-            <button class="primary-button mx-2" (click)="available_onClick();">Available
-              Position
-            </button>
-          </div>
-        </div>
-        <div class="overflow-auto w-100 expand-container">
-          <schedule-table [class.overflow-y-hidden]="programmedLoading" class="w-100 overflow-auto"
-            [dataSource]="programmedDataSource" [headers]="programmedHeaders" (onRowEvent)="table_onRowEvent($event)">
-            >
-          </schedule-table>
-        </div>
-      </div>
-    </cdk-accordion-item>
-  </cdk-accordion>
+<div class="parent-container">
+  <schedule-table [class.overflow-y-hidden]="mockDataLoading" class="w-100 overflow-hidden" [dataSource]="dataSource"
+    [headers]="headers" [loading]="mockDataLoading" (onRowEvent)="table_onRowEvent($event)">
+  </schedule-table>
 </div>

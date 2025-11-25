@@ -1,66 +1,87 @@
-<!-- <cdk-virtual-scroll-viewport itemSize="50" class="h-100 w-100" (scrolledIndexChange)="scroll_onChange()"> -->
-<table class="table h-100 w-100">
-    <thead>
-        <tr>
-            <th class="th" *ngFor="let header of headers; let i = index" [ngClass]="header.className ?? ''">
-                <div class="h-100 d-flex align-items-center justify-content-between ps-1">
-                    <div>
-
-                        <!-- title -->
-                        {{ header.title }}
-
-                        <!-- sort  -->
-                        <schedule-table-sort-column *ngIf="header.sortable" [header]="header">
-                        </schedule-table-sort-column>
-
+<div class="table-wrapper">
+    <table class="table">
+        <thead>
+            <tr>
+                <!-- Add drag handle column -->
+                <th class="th drag-handle-column">
+                    <div class="h-100 d-flex align-items-center justify-content-center">
+                        ≡
                     </div>
-                    <div class="d-flex h-100 align-items-center justify-content-between">
-                        <!-- filter -->
-                        <schedule-table-filter-column *ngIf="header.filterable" class="filter-column" [header]="header">
-                        </schedule-table-filter-column>
+                </th>
 
-                        <!-- resize -->
-                        <div class="resizer" (mousedown)="resizeColumn_onMouseDown($event ,i)">
+                <th class="th" *ngFor="let header of headers; let i = index" [ngClass]="header.className ?? ''"
+                    [class.column-dragging]="i === dragColumnIndex" [class.drag-over-left]="dragOverIndex === i"
+                    [class.drag-over-right]="dragOverIndex === i + 1">
+                    <div class="h-100 d-flex align-items-center justify-content-between ps-1">
+                        <div class="header-content">
+
+                            <!-- title -->
+                            {{ header.title }}
+
+                            <!-- sort  -->
+                            <schedule-table-sort-column *ngIf="header.sortable" [header]="header">
+                            </schedule-table-sort-column>
+
+                        </div>
+                        <div class="d-flex h-100 align-items-center justify-content-between">
+                            <!-- filter -->
+                            <schedule-table-filter-column *ngIf="header.filterable" class="filter-column"
+                                [header]="header">
+                            </schedule-table-filter-column>
+
+                            <!-- resize -->
+                            <div class="resizer" (mousedown)="resizeColumn_onMouseDown($event, i)"
+                                [attr.data-column-index]="i">
+                            </div>
                         </div>
                     </div>
-                </div>
 
-            </th>
-        </tr>
-    </thead>
-    <ng-container *ngIf="loading; else loaded">
-        <div class="loading-container">
-            <div class="loader"></div>
-        </div>
-    </ng-container>
-    <ng-template #loaded>
-        <ng-container *ngIf="tableService.finalDataSource.length === 0; else dataHasLength">
-            <div class="empty-container">
-                <div class="empty-row">
-                    <img src="assets/empty.svg" alt="" class="empty-row-icon">
-                    <p class="empty-row-text">No Data!</p>
-                </div>
+                </th>
+            </tr>
+        </thead>
+        <ng-container *ngIf="loading; else loaded">
+            <div class="loading-container">
+                <div class="loader"></div>
             </div>
         </ng-container>
-        <ng-template #dataHasLength>
-            <tbody class="h-100 w-100 overflow-auto">
-                <!-- <ng-container *cdkVirtualFor="let row of tableService.finalDataSource; let i = index"> -->
-                <ng-container *ngFor="let row of tableService.finalDataSource; let i = index">
-                    <tr [ngStyle]="{ 'height' : rowHeight + 'px'}">
-                        <td *ngFor="let header of headers" class="cell" [ngClass]="header.className ?? ''">
-                            <ng-container *ngIf="header.dynamicCellComponent" [column]="header" [row]="row"
-                                [onRowEvent]="onRowEvent" [component]="header.dynamicCellComponent" dynamicCell>
-                            </ng-container>
-                            <ng-container *ngIf="!header.dynamicCellComponent">
-                                <div class="d-flex justify-content-start align-items-center">
-                                    {{ row[header.key] }}
+        <ng-template #loaded>
+            <ng-container *ngIf="tableService.finalDataSource.length === 0; else dataHasLength">
+                <div class="empty-container">
+                    <div class="empty-row">
+                        <img src="assets/empty.svg" alt="" class="empty-row-icon">
+                        <p class="empty-row-text">No Data!</p>
+                    </div>
+                </div>
+            </ng-container>
+            <ng-template #dataHasLength>
+                <tbody class="h-100 w-100 overflow-auto">
+                    <ng-container *ngFor="let row of tableService.finalDataSource; let i = index">
+                        <tr [ngStyle]="{ 'height' : rowHeight + 'px'}" [class.row-dragging]="i === dragRowIndex"
+                            [class.drag-over-above]="dragOverRowIndex === i"
+                            [class.drag-over-below]="dragOverRowIndex === i + 1">
+
+                            <!-- Drag handle cell -->
+                            <td class="cell drag-handle-cell" (mousedown)="startRowDrag($event, i)">
+                                <div class="h-100 d-flex align-items-center justify-content-center">
+                                    ≡
                                 </div>
-                            </ng-container>
-                        </td>
-                    </tr>
-                </ng-container>
-            </tbody>
+                            </td>
+
+                            <td *ngFor="let header of headers; trackBy: trackByHeader" class="cell"
+                                [ngClass]="header.className ?? ''">
+                                <ng-container *ngIf="header.dynamicCellComponent" [column]="header" [row]="row"
+                                    [onRowEvent]="onRowEvent" [component]="header.dynamicCellComponent" dynamicCell>
+                                </ng-container>
+                                <ng-container *ngIf="!header.dynamicCellComponent">
+                                    <div class="d-flex justify-content-start align-items-center">
+                                        {{ row[header.key] }}
+                                    </div>
+                                </ng-container>
+                            </td>
+                        </tr>
+                    </ng-container>
+                </tbody>
+            </ng-template>
         </ng-template>
-    </ng-template>
-</table>
-<!-- </cdk-virtual-scroll-viewport> -->
+    </table>
+</div>
