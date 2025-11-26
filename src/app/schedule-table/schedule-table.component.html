@@ -15,10 +15,6 @@
 
     <!-- Pagination Controls -->
     <div class="pagination-container" *ngIf="showPagination && tableService.dataSource?.length || 0 > 0">
-        <div class="pagination-info">
-            <span>Showing {{ ((currentPage - 1) * pageSize) + 1 }} to {{ Math.min(currentPage * pageSize,
-                tableService.dataSource.length) }} of {{ tableService.dataSource.length }} entries</span>
-        </div>
 
         <div class="pagination-controls">
             <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()"
@@ -40,12 +36,21 @@
         </div>
 
         <div class="page-size-selector" *ngIf="pageSizeOptions?.length || 0 > 0">
-            <label>Rows per page:</label>
+            <label>page size:</label>
             <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
                 <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
             </select>
         </div>
+
+        <!-- <div class="pagination-info">
+            <span>Showing {{ ((currentPage - 1) * pageSize) + 1 }} to {{ Math.min(currentPage * pageSize,
+                tableService.dataSource.length) }} of {{ tableService.dataSource.length }} entries</span>
+        </div> -->
+        <div class="pagination-info">
+            <span>Total Items: {{tableService.dataSource.length}}</span>
+        </div>
     </div>
+    
     <table class="table" [dir]="direction">
         <thead>
             <tr>

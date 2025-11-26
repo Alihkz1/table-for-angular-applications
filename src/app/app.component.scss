@@ -1,8 +1,8 @@
 .wrapper {
-  width: 75%;
+  width: 100%;
   height: calc(100vh - 50px); 
-  max-width: 1200px;
-  margin: 20px auto;
+  max-width: calc(100vw - 50px);
+  margin: 20px;
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 10px;
