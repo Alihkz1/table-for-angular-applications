@@ -1,8 +1,8 @@
 <div class="wrapper">
-  <schedule-table class="w-100 overflow-hidden" [data]="ACTIVITY_DATA"
+  <didar-table class="w-100 overflow-hidden" [data]="ACTIVITY_DATA"
     [headers]="headers" [loading]="mockDataLoading" (onRowEvent)="table_onRowEvent($event)" [pageSize]="10"
     [showPagination]="true"
     [pageSizeOptions]="[5, 10, 25, 50]"
     (pageChanged)="onPageChange($event)">
-  </schedule-table>
+  </didar-table>
 </div>

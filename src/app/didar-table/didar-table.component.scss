@@ -1,4 +1,3 @@
-// Layout & Structure
 .table-wrapper {
     width: 100%;
     height: 100%;
@@ -15,7 +14,6 @@
     table-layout: fixed;
 }
 
-// Header Styles
 thead {
     position: sticky;
     top: 0;
@@ -34,11 +32,7 @@ th {
     -moz-user-select: none;
     -ms-user-select: none;
     transition: background-color 0.3s ease;
-    cursor: grab;
-
-    &:hover {
-        cursor: grab;
-    }
+    cursor: default;
 
     &.drag-over-left {
         border-left: 1px solid #0d8377;
@@ -52,14 +46,9 @@ th {
 }
 
 .header-content {
-    cursor: grab;
-
-    &:active {
-        cursor: grabbing;
-    }
+    cursor: default;
 }
 
-// Body & Cell Styles
 tbody {
     min-height: 300px;
 }
@@ -69,7 +58,6 @@ tbody {
     height: 100%;
 }
 
-// Drag & Drop Styles
 .drag-ghost {
     color: white;
     cursor: grabbing;
@@ -120,7 +108,30 @@ tbody {
     }
 }
 
-// Resizer
+.column-drag-handle {
+    width: 20px;
+    height: 20px;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+    font-size: 14px;
+    color: white;
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        cursor: grabbing;
+    }
+    
+    &:active {
+        cursor: grabbing;
+    }
+}
+
 .resizer {
     height: 100%;
     width: 6px;
@@ -136,7 +147,6 @@ tbody {
     }
 }
 
-// Table Actions
 .table-actions {
     position: absolute;
     top: 80px;
@@ -194,7 +204,6 @@ tbody {
     }
 }
 
-// Loading States
 .loading-container {
     display: flex;
     justify-content: center;
@@ -246,7 +255,6 @@ tbody {
     }
 }
 
-// Empty State
 .empty-container {
     display: flex;
     justify-content: center;
@@ -272,7 +280,6 @@ tbody {
     }
 }
 
-// Utility Classes
 .h-100 {
     height: 100%;
 }
@@ -299,12 +306,10 @@ tbody {
     align-items: center;
 }
 
-// Table Spacing
 .table > :not(caption) > * > * {
     padding: 4px 10px;
 }
 
-// Dynamic Components
 .dynamic-wrapper {
     width: 100%;
     height: 100%;
@@ -313,13 +318,11 @@ tbody {
     justify-content: stretch;
 }
 
-// External Components
 ::ng-deep .popover-body {
     height: 150px;
     width: 274px;
 }
 
-// pagination
 .pagination-container {
     display: flex;
     justify-content: flex-end;
@@ -413,7 +416,6 @@ tbody {
     }
 }
 
-// Responsive design
 @media (max-width: 768px) {
     .pagination-container {
         flex-direction: column;

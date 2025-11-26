@@ -1,11 +1,9 @@
 <div class="table-wrapper">
-    <!-- Three dots menu button -->
     <div class="table-actions" [class.rtl]="direction === 'rtl'">
         <button class="actions-btn" (click)="toggleColumnsMenu()">
             <span class="dots">•••</span>
         </button>
 
-        <!-- Columns visibility menu -->
         <div class="columns-menu-container" *ngIf="showColumnsMenu">
             <app-columns-visibility [headers]="headers" (columnToggled)="onColumnToggled($event)"
                 (onSave)="onSaveColumns()" (onClose)="onCancelColumns()">
@@ -13,9 +11,7 @@
         </div>
     </div>
 
-    <!-- Pagination Controls -->
     <div class="pagination-container" *ngIf="showPagination && tableService.dataSource?.length || 0 > 0">
-
         <div class="pagination-controls">
             <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()"
                 [class.disabled]="currentPage === 1">
@@ -42,26 +38,20 @@
             </select>
         </div>
 
-        <!-- <div class="pagination-info">
-            <span>Showing {{ ((currentPage - 1) * pageSize) + 1 }} to {{ Math.min(currentPage * pageSize,
-                tableService.dataSource.length) }} of {{ tableService.dataSource.length }} entries</span>
-        </div> -->
         <div class="pagination-info">
             <span>Total Items: {{tableService.dataSource.length}}</span>
         </div>
     </div>
-    
+
     <table class="table" [dir]="direction">
         <thead>
             <tr>
-                <!-- Add drag handle column -->
                 <th class="th drag-handle-column">
                     <div class="h-100 flex-center">
                         ≡
                     </div>
                 </th>
 
-                <!-- Use visibleHeaders instead of headers -->
                 <th class="th" *ngFor="let header of visibleHeaders; let i = index" [ngClass]="header.className ?? ''"
                     [class.column-dragging]="i === dragColumnIndex" [class.drag-over-left]="dragOverIndex === i"
                     [class.drag-over-right]="dragOverIndex === i + 1" [style.width.px]="header.width"
@@ -69,10 +59,14 @@
                     <div class="h-100 d-flex align-items-center justify-content-between">
                         <div class="header-content">
                             {{ header.title }}
-                            <schedule-table-sort-column *ngIf="header.sortable" [header]="header">
-                            </schedule-table-sort-column>
+                            <didar-table-sort-column *ngIf="header.sortable" [header]="header"
+                                [currentPageData]="displayData">
+                            </didar-table-sort-column>
                         </div>
                         <div class="d-flex h-100 align-items-center justify-content-between">
+                            <div class="column-drag-handle" (mousedown)="startColumnDrag($event, i)">
+                                ≡
+                            </div>
                             <div class="resizer" (mousedown)="resizeColumn_onMouseDown($event, i)"
                                 [attr.data-column-index]="i">
                             </div>

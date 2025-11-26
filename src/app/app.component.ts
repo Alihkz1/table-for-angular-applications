@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ScheduleTableComponent } from './schedule-table/schedule-table.component';
+import { DidarTableComponent } from './didar-table/didar-table.component';
 import { IHeader } from './shared/model/IHeader.interface';
 import { CommonModule } from '@angular/common';
 import { IRowEvent } from './shared/model/IRowEvent.interface';
@@ -15,7 +15,7 @@ import { ActionsCellComponent } from './dynamic-cells/actions-cell/actions-cell.
   selector: 'app-root',
   standalone: true,
   imports: [
-    ScheduleTableComponent,
+    DidarTableComponent,
     CdkAccordionModule,
     MatSelectModule,
     MatFormFieldModule,
@@ -53,7 +53,7 @@ export class AppComponent implements OnInit {
         key: 'Title',
         filterable: true,
         sortable: true,
-        width: 100,
+        width: 150,
       },
       {
         title: 'مسئول انجام',

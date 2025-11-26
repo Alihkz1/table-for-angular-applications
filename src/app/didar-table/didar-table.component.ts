@@ -3,30 +3,34 @@ import { IHeader } from '../shared/model/IHeader.interface';
 import { CommonModule } from '@angular/common';
 import { DynamicCellDirective } from '../shared/directive/dynamic-cell.directive';
 import { IRowEvent } from '../shared/model/IRowEvent.interface';
-import { ScheduleTableService } from '../shared/service/schedule-table.service';
-import { ScheduleTableSortColumnComponent } from './schedule-table-sort-column/schedule-table-sort-column.component';
+import { DidarTableService } from '../shared/service/didar-table.service';
+import { DidarTableSortColumnComponent, SORT_ENUM } from './didar-table-sort-column/didar-table-sort-column.component';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { ColumnsVisibilityComponent } from './columns-visibility/columns-visibility.component';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'schedule-table',
+  selector: 'didar-table',
   standalone: true,
   imports: [
     CommonModule,
     DynamicCellDirective,
-    ScheduleTableSortColumnComponent,
+    DidarTableSortColumnComponent,
     ScrollingModule,
     ColumnsVisibilityComponent,
     FormsModule
   ],
-  providers: [ScheduleTableService],
-  templateUrl: './schedule-table.component.html',
-  styleUrl: './schedule-table.component.scss'
+  providers: [DidarTableService],
+  templateUrl: './didar-table.component.html',
+  styleUrl: './didar-table.component.scss'
 })
-export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() headers: IHeader[] = [];
-  @Input() set data(data: any[]) { this.tableService.setDataSource = data; };
+  private originalData: any[] = [];
+  @Input() set data(data: any[]) {
+    this.tableService.setDataSource = data;
+    this.originalData = [...data];
+  };
   @Input() rowHeight = 50;
   @Input() loading: boolean = false;
   @Input() direction: 'rtl' | 'ltr' = 'rtl';
@@ -36,32 +40,27 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
   @Output() rowsReordered: EventEmitter<any[]> = new EventEmitter();
   @Output() pageChanged = new EventEmitter<{ page: number, pageSize: number }>();
 
-  // New pagination inputs
-  @Input() pageSize: number = 10; // Number of items per page
-  @Input() showPagination: boolean = true; // Show/hide pagination
-  @Input() pageSizeOptions: number[] = [5, 10, 20, 50]; // Page size options
+  @Input() pageSize: number = 10;
+  @Input() showPagination: boolean = true;
+  @Input() pageSizeOptions: number[] = [5, 10, 20, 50];
 
-  // Column resize variables
   private resizing = false;
   private startX: number;
   private startWidth: number;
   private currentColumn: HTMLElement | null = null;
 
-  // Column reordering variables
   public isDragging = false;
   public dragColumnIndex: number = -1;
   private dragColumn: HTMLElement | null = null;
   private dragGhost: HTMLElement | null = null;
   public dragOverIndex: number = -1;
 
-  // Row reordering variables
   public isRowDragging = false;
   public dragRowIndex: number = -1;
   private dragRowElement: HTMLElement | null = null;
   private dragRowGhost: HTMLElement | null = null;
   public dragOverRowIndex: number = -1;
 
-  // Add pagination properties
   public currentPage: number = 1;
   public totalPages: number = 1;
   public paginatedData: any[] = [];
@@ -70,17 +69,11 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
   private originalHeaders: IHeader[] = [];
 
   public Math = Math;
+
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     if ((event.target as Element).classList.contains('resizer')) {
       this.startColumnResize(event);
-    }
-    else if ((event.target as Element).closest('th') &&
-      !(event.target as Element).closest('.resizer') &&
-      !(event.target as Element).closest('schedule-table-filter-column') &&
-      !(event.target as Element).closest('schedule-table-sort-column') &&
-      !(event.target as Element).closest('.drag-handle-column')) {
-      this.startColumnDrag(event);
     }
   }
 
@@ -119,13 +112,17 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
 
   constructor(
     private _cdr: ChangeDetectorRef,
-    public tableService: ScheduleTableService,
+    public tableService: DidarTableService,
     private _elementRef: ElementRef
   ) { }
 
   ngOnInit(): void {
     this.initializeHeadersVisibility();
     this.updatePagination();
+    this.tableService.dataSourceObs.subscribe((res) => {
+      this.currentPage = 1;
+      this.updatePagination();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -142,10 +139,10 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
     }
     if (changes['data'] || changes['pageSize']) {
       this.updatePagination();
+      this.currentPage = 1;
     }
   }
 
-  // Add pagination methods
   private updatePagination(): void {
     if (!this.tableService.dataSource || !this.showPagination) {
       this.paginatedData = this.tableService.dataSource || [];
@@ -194,10 +191,8 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
       const tableWrapper = this._elementRef.nativeElement.querySelector('.table-wrapper');
       if (tableWrapper) {
         if (this.direction === 'rtl') {
-          // Scroll to the right for RTL
           tableWrapper.scrollLeft = tableWrapper.scrollWidth;
         } else {
-          // Scroll to the left for LTR (default)
           tableWrapper.scrollLeft = 0;
         }
       }
@@ -237,14 +232,12 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
     this.showColumnsMenu = false;
   }
 
-  // Get visible headers for display
   get visibleHeaders(): IHeader[] {
     return this.headers.filter(header => header.visible !== false);
   }
 
   ngOnDestroy(): void { }
 
-  // Column Resize Methods
   private startColumnResize(event: MouseEvent): void {
     this.resizing = true;
     this.startX = event.clientX;
@@ -269,8 +262,7 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
       this.currentColumn.style.width = `${finalWidth}px`;
       this.currentColumn.style.minWidth = `${finalWidth}px`;
 
-      // Update the header width in the headers array
-      const columnIndex = Array.from(this.currentColumn.parentElement!.children).indexOf(this.currentColumn) - 1; // Adjust for drag handle
+      const columnIndex = Array.from(this.currentColumn.parentElement!.children).indexOf(this.currentColumn) - 1;
       if (columnIndex >= 0 && columnIndex < this.headers.length) {
         this.headers[columnIndex].width = finalWidth;
       }
@@ -279,14 +271,13 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
     event.preventDefault();
   }
 
-  // Column Drag & Drop Methods - UPDATED FOR RTL/LTR
-  private startColumnDrag(event: MouseEvent): void {
+  public startColumnDrag(event: MouseEvent, columnIndex: number): void {
     const thElement = (event.target as Element).closest('th') as HTMLElement;
     if (!thElement) return;
 
     this.isDragging = true;
     this.dragColumn = thElement;
-    this.dragColumnIndex = Array.from(thElement.parentElement!.children).indexOf(thElement) - 1; // Adjust for drag handle column
+    this.dragColumnIndex = columnIndex;
 
     this.createDragGhost(thElement, event.clientX, event.clientY);
     thElement.classList.add('column-dragging');
@@ -309,8 +300,8 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
     this.dragGhost.style.pointerEvents = 'none';
     this.dragGhost.style.cursor = 'grabbing';
     this.dragGhost.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
-    this.dragGhost.style.background = '#00AF9E'; // Updated to match your theme
-    this.dragGhost.style.border = '2px solid #0d8377'; // Updated to match your theme
+    this.dragGhost.style.background = '#00AF9E';
+    this.dragGhost.style.border = '2px solid #0d8377';
     this.dragGhost.style.borderRadius = '4px';
     this.dragGhost.style.transform = 'rotate(2deg) scale(1.02)';
     this.dragGhost.style.transition = 'none';
@@ -362,9 +353,7 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
       const thRect = targetTh.getBoundingClientRect();
       const thCenterX = thRect.left + thRect.width / 2;
 
-      // Handle RTL/LTR logic for drop positioning
       if (this.direction === 'rtl') {
-        // In RTL, left side becomes right side and vice versa
         if (event.clientX > thCenterX) {
           targetTh.classList.add('drag-over-left');
           this.dragOverIndex = closestIndex;
@@ -373,7 +362,6 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
           this.dragOverIndex = closestIndex + 1;
         }
       } else {
-        // LTR - normal behavior
         if (event.clientX < thCenterX) {
           targetTh.classList.add('drag-over-left');
           this.dragOverIndex = closestIndex;
@@ -454,10 +442,9 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
     this.dragRowGhost.style.cursor = 'grabbing';
     this.dragRowGhost.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
     this.dragRowGhost.style.background = '#ffffff';
-    this.dragRowGhost.style.border = '1px solid #0d8377'; // Updated to match your theme
+    this.dragRowGhost.style.border = '1px solid #0d8377';
     this.dragRowGhost.style.transition = 'none';
 
-    // Remove any existing drag handle styling that might cause misalignment
     const dragHandle = this.dragRowGhost.querySelector('.drag-handle-cell');
     if (dragHandle) {
       (dragHandle as HTMLElement).style.background = '#f8f9fa';
@@ -465,17 +452,15 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
 
     document.body.appendChild(this.dragRowGhost);
 
-    // Set initial position to match cursor - FIXED POSITIONING
     const ghostRect = this.dragRowGhost.getBoundingClientRect();
     this.dragRowGhost.style.left = `${rect.left}px`;
-    this.dragRowGhost.style.top = `${clientY - 10}px`; // Offset to center on cursor
+    this.dragRowGhost.style.top = `${clientY - 10}px`;
   }
 
   private updateRowDragGhostPosition(event: MouseEvent): void {
     if (!this.dragRowGhost) return;
 
     const rect = this.dragRowGhost.getBoundingClientRect();
-    // Keep the same horizontal position, only update vertical
     this.dragRowGhost.style.top = `${event.clientY - 10}px`;
   }
 
@@ -572,7 +557,6 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
     return header.key || index.toString();
   }
 
-
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const maxVisiblePages = 5;
@@ -580,7 +564,6 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
 
-    // Adjust start page if we're near the end
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
@@ -592,4 +575,63 @@ export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit,
     return pages;
   }
 
+  public sortCurrentPage(header: IHeader, mode: SORT_ENUM): void {
+    if (!this.displayData || this.displayData.length === 0) {
+      return;
+    }
+
+    const sortedPageData = [...this.displayData].sort((a, b) => {
+      const valueA = a[header.key];
+      const valueB = b[header.key];
+
+      if (valueA == null && valueB == null) return 0;
+      if (valueA == null) return mode === SORT_ENUM.ASC ? -1 : 1;
+      if (valueB == null) return mode === SORT_ENUM.ASC ? 1 : -1;
+
+      const numA = this.tryParseNumber(valueA);
+      const numB = this.tryParseNumber(valueB);
+
+      if (numA !== null && numB !== null) {
+        return mode === SORT_ENUM.ASC ? numA - numB : numB - numA;
+      }
+
+      const stringA = this.prepareForSorting(valueA);
+      const stringB = this.prepareForSorting(valueB);
+
+      const comparison = stringA.localeCompare(stringB, 'fa-IR', {
+        sensitivity: 'base',
+        numeric: true,
+        ignorePunctuation: true
+      });
+
+      return mode === SORT_ENUM.ASC ? comparison : -comparison;
+    });
+
+    this.paginatedData = sortedPageData;
+  }
+
+  private tryParseNumber(value: any): number | null {
+    if (typeof value === 'number') return value;
+
+    if (typeof value === 'string') {
+      const normalized = value
+        .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString())
+        .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+
+      const num = parseFloat(normalized.replace(/[^\d.-]/g, ''));
+      return isNaN(num) ? null : num;
+    }
+
+    return null;
+  }
+
+  private prepareForSorting(value: any): string {
+    if (value == null) return '';
+
+    const stringValue = String(value).trim();
+
+    return stringValue
+      .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString())
+      .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+  }
 }
