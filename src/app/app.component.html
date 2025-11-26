@@ -1,5 +1,5 @@
-<div class="parent-container">
-  <schedule-table [class.overflow-y-hidden]="mockDataLoading" class="w-100 overflow-hidden" [dataSource]="dataSource"
+<div class="wrapper">
+  <schedule-table [class.overflow-y-hidden]="mockDataLoading" class="w-100 overflow-hidden" [data]="ACTIVITY_DATA"
     [headers]="headers" [loading]="mockDataLoading" (onRowEvent)="table_onRowEvent($event)">
   </schedule-table>
 </div>

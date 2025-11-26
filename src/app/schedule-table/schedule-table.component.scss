@@ -19,11 +19,11 @@ thead {
 }
 
 th {
-    background: #415bde;
+    background: #00AF9E;
     font-size: 14px;
     color: white;
     border-right: 1px solid #b5b5b5;
-    min-width: 100px;
+    // Remove fixed min-width: 20px; and let header.width control it
     height: 55px;
     position: relative;
     user-select: none;
@@ -38,13 +38,13 @@ th {
     }
 
     &.drag-over-left {
-        border-left: 1px solid #7499ff !important;
-        box-shadow: inset 3px 0 0 #7499ff;
+        border-left: 1px solid #0d8377 !important;
+        box-shadow: inset 3px 0 0 #0d8377;
     }
 
     &.drag-over-right {
-        border-right: 1px solid #7499ff !important;
-        box-shadow: inset -3px 0 0 #7499ff;
+        border-right: 1px solid #0d8377 !important;
+        box-shadow: inset -3px 0 0 #0d8377;
     }
 
     .header-content {
@@ -67,7 +67,7 @@ tbody {
 }
 
 .cell {
-    border-right: 1px solid #b5b5b5;
+    border-left: 1px solid #b5b5b5;
     height: 100%;
 }
 
@@ -175,7 +175,7 @@ tbody {
 }
 
 .table> :not(caption)>*>* {
-    padding: 0 0 0 5px !important;
+    padding: 4px 10px 0 !important;
 }
 
 

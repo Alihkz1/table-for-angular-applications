@@ -5,7 +5,7 @@ import { DynamicCellDirective } from '../shared/directive/dynamic-cell.directive
 import { IRowEvent } from '../shared/model/IRowEvent.interface';
 import { ScheduleTableFilterColumnComponent } from './schedule-table-filter-column/schedule-table-filter-column.component';
 import { ScheduleTableService } from '../shared/service/schedule-table.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
 import { ScheduleTableSortColumnComponent } from './schedule-table-sort-column/schedule-table-sort-column.component';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
@@ -25,9 +25,10 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 })
 export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() headers: IHeader[] = [];
-  @Input() set dataSource(data: any[]) { this.tableService.setRealDataSource = data; };
+  @Input() set data(data: any[]) { this.tableService.setDataSource = data; };
   @Input() rowHeight = 50;
   @Input() loading: boolean = false;
+  @Input() direction: 'rtl' | 'ltr' = 'rtl';
   @Output() onRowEvent: EventEmitter<IRowEvent> = new EventEmitter();
   @Output() columnsReordered: EventEmitter<IHeader[]> = new EventEmitter();
   @Output() rowsReordered: EventEmitter<any[]> = new EventEmitter();
@@ -38,14 +39,11 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
   private resizing = false;
   private startX: number;
   private startWidth: number;
-  private resizeColumnIndex: number;
   private currentColumn: HTMLElement | null = null;
 
   // Column reordering variables
   public isDragging = false;
   public dragColumnIndex: number = -1;
-  private dragStartX: number = 0;
-  private dragStartY: number = 0;
   private dragColumn: HTMLElement | null = null;
   private dragGhost: HTMLElement | null = null;
   public dragOverIndex: number = -1;
@@ -53,7 +51,6 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
   // Row reordering variables
   public isRowDragging = false;
   public dragRowIndex: number = -1;
-  private dragRowStartY: number = 0;
   private dragRowElement: HTMLElement | null = null;
   private dragRowGhost: HTMLElement | null = null;
   public dragOverRowIndex: number = -1;
@@ -118,8 +115,9 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['dataSource'])
-      this.tableService.setRealDataSource = changes['dataSource']['currentValue'];
+    if (changes['direction']) {
+      this._cdr.detectChanges();
+    }
   }
 
   ngOnDestroy(): void {
@@ -128,27 +126,26 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private _filterColumnsListener() {
-    this.tableService.columnFiltersObs.pipe(takeUntil(this._unSubscribe$)).subscribe((result) => {
-      if (!Object.keys(result).length) {
-        this.tableService.setDataSource = [];
-        return;
-      }
-      let items: any[] = [];
-      Object.keys(result).forEach((key, i) => {
-        if (i === 0)
-          items = this.tableService.realDataSource.filter((el) => el[key]?.toLowerCase().includes(result[key]));
-        else if (i > 0)
-          items = items.filter((el) => el[key].toLowerCase().includes(result[key]));
-      });
-      this.tableService.setDataSource = items;
-    });
+    // this.tableService.columnFiltersObs.pipe(takeUntil(this._unSubscribe$)).subscribe((result) => {
+    //   if (!Object.keys(result).length) {
+    //     this.tableService.setDataSource = [];
+    //     return;
+    //   }
+    //   let items: any[] = [];
+    //   Object.keys(result).forEach((key, i) => {
+    //     if (i === 0)
+    //       items = this.tableService.realDataSource.filter((el) => el[key]?.toLowerCase().includes(result[key]));
+    //     else if (i > 0)
+    //       items = items.filter((el) => el[key].toLowerCase().includes(result[key]));
+    //   });
+    //   this.tableService.setDataSource = items;
+    // });
   }
 
   // Column Resize Methods
   private startColumnResize(event: MouseEvent): void {
     this.resizing = true;
     this.startX = event.clientX;
-    this.resizeColumnIndex = parseInt((event.target as Element).getAttribute('data-column-index') || '0', 10);
     this.currentColumn = (event.target as Element).closest('th') as HTMLElement;
 
     if (this.currentColumn) {
@@ -167,14 +164,20 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
     const finalWidth = Math.max(minWidth, newWidth);
 
     if (this.currentColumn) {
-      this.currentColumn.style.minWidth = `${finalWidth}px`;
       this.currentColumn.style.width = `${finalWidth}px`;
+      this.currentColumn.style.minWidth = `${finalWidth}px`;
+
+      // Update the header width in the headers array
+      const columnIndex = Array.from(this.currentColumn.parentElement!.children).indexOf(this.currentColumn) - 1; // Adjust for drag handle
+      if (columnIndex >= 0 && columnIndex < this.headers.length) {
+        this.headers[columnIndex].width = finalWidth;
+      }
     }
 
     event.preventDefault();
   }
 
-  // Column Drag & Drop Methods
+  // Column Drag & Drop Methods - UPDATED FOR RTL/LTR
   private startColumnDrag(event: MouseEvent): void {
     const thElement = (event.target as Element).closest('th') as HTMLElement;
     if (!thElement) return;
@@ -182,8 +185,6 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
     this.isDragging = true;
     this.dragColumn = thElement;
     this.dragColumnIndex = Array.from(thElement.parentElement!.children).indexOf(thElement) - 1; // Adjust for drag handle column
-    this.dragStartX = event.clientX;
-    this.dragStartY = event.clientY;
 
     this.createDragGhost(thElement, event.clientX, event.clientY);
     thElement.classList.add('column-dragging');
@@ -206,8 +207,8 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
     this.dragGhost.style.pointerEvents = 'none';
     this.dragGhost.style.cursor = 'grabbing';
     this.dragGhost.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
-    this.dragGhost.style.background = '#415bde';
-    this.dragGhost.style.border = '2px solid #7499ff';
+    this.dragGhost.style.background = '#00AF9E'; // Updated to match your theme
+    this.dragGhost.style.border = '2px solid #0d8377'; // Updated to match your theme
     this.dragGhost.style.borderRadius = '4px';
     this.dragGhost.style.transform = 'rotate(2deg) scale(1.02)';
     this.dragGhost.style.transition = 'none';
@@ -259,12 +260,25 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
       const thRect = targetTh.getBoundingClientRect();
       const thCenterX = thRect.left + thRect.width / 2;
 
-      if (event.clientX < thCenterX) {
-        targetTh.classList.add('drag-over-left');
-        this.dragOverIndex = closestIndex;
+      // Handle RTL/LTR logic for drop positioning
+      if (this.direction === 'rtl') {
+        // In RTL, left side becomes right side and vice versa
+        if (event.clientX > thCenterX) {
+          targetTh.classList.add('drag-over-left');
+          this.dragOverIndex = closestIndex;
+        } else {
+          targetTh.classList.add('drag-over-right');
+          this.dragOverIndex = closestIndex + 1;
+        }
       } else {
-        targetTh.classList.add('drag-over-right');
-        this.dragOverIndex = closestIndex + 1;
+        // LTR - normal behavior
+        if (event.clientX < thCenterX) {
+          targetTh.classList.add('drag-over-left');
+          this.dragOverIndex = closestIndex;
+        } else {
+          targetTh.classList.add('drag-over-right');
+          this.dragOverIndex = closestIndex + 1;
+        }
       }
     }
   }
@@ -314,7 +328,6 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
     this.isRowDragging = true;
     this.dragRowIndex = rowIndex;
     this.dragRowElement = rowElement;
-    this.dragRowStartY = event.clientY;
 
     this.createRowDragGhost(rowElement, event.clientX, event.clientY);
     rowElement.classList.add('row-dragging');
@@ -339,7 +352,7 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
     this.dragRowGhost.style.cursor = 'grabbing';
     this.dragRowGhost.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
     this.dragRowGhost.style.background = '#ffffff';
-    this.dragRowGhost.style.border = '1px solid #7499ff';
+    this.dragRowGhost.style.border = '1px solid #0d8377'; // Updated to match your theme
     this.dragRowGhost.style.transition = 'none';
 
     // Remove any existing drag handle styling that might cause misalignment
@@ -421,7 +434,7 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private reorderRows(fromIndex: number, toIndex: number): void {
-    const currentData = [...this.tableService.finalDataSource];
+    const currentData = [...this.tableService.dataSource];
     const [movedRow] = currentData.splice(fromIndex, 1);
     currentData.splice(toIndex, 0, movedRow);
 
