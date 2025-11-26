@@ -7,4 +7,6 @@ export interface IHeader {
     asc?: boolean,
     dynamicCellComponent?: any,
     className?: string,
+    visible?: boolean;
+    valueFormatter?: (value: any, row?: any) => any;
 }

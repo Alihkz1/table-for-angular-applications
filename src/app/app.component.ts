@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { ACTIVITY_LIST } from './shared/mock-data/MOCK_DATA';
+import { ActionsCellComponent } from './dynamic-cells/actions-cell/actions-cell.component';
 
 @Component({
   selector: 'app-root',
@@ -27,20 +28,25 @@ import { ACTIVITY_LIST } from './shared/mock-data/MOCK_DATA';
 })
 export class AppComponent implements OnInit {
   public headers: IHeader[] = [];
-
-  mockDataLoading: boolean;
-
   public ACTIVITY_DATA = ACTIVITY_LIST
+  public mockDataLoading: boolean = true
 
   ngOnInit(): void {
-    this.initHeaders();
+    this._initHeaders();
+    setTimeout(() => {
+      this.mockDataLoading = false
+    }, 1000);
   }
 
   public table_onRowEvent(event: IRowEvent): void {
-
+    console.log(event)
   }
 
-  initHeaders() {
+  public onPageChange(event: { page: number, pageSize: number }): void {
+    console.log('onPageChange -> ', event)
+  }
+
+  private _initHeaders() {
     this.headers = [
       {
         title: 'عنوان فعالیت',
@@ -51,23 +57,46 @@ export class AppComponent implements OnInit {
       },
       {
         title: 'مسئول انجام',
-        key: 'EligibilityToBeTrainee',
+        key: 'Owner',
         filterable: true,
         sortable: true,
-        width: 150
+        width: 150,
+        valueFormatter: (v) => v.DisplayName
       },
       {
         title: 'تاریخ فعالیت',
-        key: 'RnTierTitle',
+        key: 'RegisterDate',
         filterable: true,
         sortable: true,
         width: 250,
       },
+      // {
+      //   title: 'اشخاص و افراد مرتبط',
+      //   key: '',
+      //   filterable: true,
+      //   sortable: true,
+      //   width: 250,
+      // },
+      // {
+      //   title: 'معامله مرتبط',
+      //   key: '',
+      //   filterable: true,
+      //   sortable: true,
+      //   width: 250,
+      // },
+      // {
+      //   title: 'کارت مرتبط',
+      //   key: '',
+      //   filterable: true,
+      //   sortable: true,
+      //   width: 250,
+      // },
       {
-        title: 'اشخاص و افراد مرتبط',
-        key: 'RnTierTitle',
+        title: 'عملیات',
+        key: 'actions',
+        dynamicCellComponent: ActionsCellComponent,
         filterable: true,
-        sortable: true,
+        sortable: false,
         width: 250,
       },
     ];

@@ -1,6 +1,6 @@
 .wrapper {
   width: 75%;
-  height: 600px; 
+  height: calc(100vh - 50px); 
   max-width: 1200px;
   margin: 20px auto;
   border: 1px solid #ccc;

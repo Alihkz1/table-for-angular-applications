@@ -1,0 +1,22 @@
+<div class="columns-visibility-menu">
+    <div class="menu-header">
+        <!-- todo based on direction -->
+        <button class="close-btn" (click)="onClose.emit()">×</button>
+        <h6 class="menu-title">نمایش ستون ها</h6>
+    </div>
+
+    <div class="columns-list">
+        <div *ngFor="let header of headers" class="column-item">
+            <label class="checkbox-label">
+                <input type="checkbox" [checked]="header.visible !== false" (change)="onColumnToggle(header, $event)"
+                    class="checkbox-input">
+                <span class="checkmark"></span>
+                <span class="column-title">{{ header.title }}</span>
+            </label>
+        </div>
+    </div>
+    <div class="menu-actions">
+        <button class="btn btn-cancel" (click)="onClose.emit()">لغو</button>
+        <button class="btn btn-save" (click)="onSave.emit()">ذخیره</button>
+      </div>
+</div>

@@ -1,8 +1,10 @@
-<ng-container *ngIf="!header.asc">
-    <img class="sort-icon" src="assets/asc-sort.svg" alt="sort"
-        (click)="header.asc = true; sortChange_onClick(0)">
-</ng-container>
-<ng-container *ngIf="header.asc">
-    <img class="sort-icon" src="assets/desc-sort.svg" alt="sort"
-        (click)="header.asc = false; sortChange_onClick(1)">
+<ng-container *ngIf="header.sortable">
+    <ng-container *ngIf="!header.asc">
+        <img class="sort-icon" src="assets/asc-sort.svg" alt="sort"
+            (click)="header.asc = true; sortChange_onClick(0)">
+    </ng-container>
+    <ng-container *ngIf="header.asc">
+        <img class="sort-icon" src="assets/desc-sort.svg" alt="sort"
+            (click)="header.asc = false; sortChange_onClick(1)">
+    </ng-container>
 </ng-container>

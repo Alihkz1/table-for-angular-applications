@@ -1,3 +1,4 @@
+// Layout & Structure
 .table-wrapper {
     width: 100%;
     height: 100%;
@@ -12,6 +13,7 @@
     table-layout: fixed;
 }
 
+// Header Styles
 thead {
     position: sticky;
     top: 0;
@@ -23,7 +25,6 @@ th {
     font-size: 14px;
     color: white;
     border-right: 1px solid #b5b5b5;
-    // Remove fixed min-width: 20px; and let header.width control it
     height: 55px;
     position: relative;
     user-select: none;
@@ -38,30 +39,25 @@ th {
     }
 
     &.drag-over-left {
-        border-left: 1px solid #0d8377 !important;
+        border-left: 1px solid #0d8377;
         box-shadow: inset 3px 0 0 #0d8377;
     }
 
     &.drag-over-right {
-        border-right: 1px solid #0d8377 !important;
+        border-right: 1px solid #0d8377;
         box-shadow: inset -3px 0 0 #0d8377;
     }
+}
 
-    .header-content {
-        cursor: grab;
+.header-content {
+    cursor: grab;
 
-        &:active {
-            cursor: grabbing;
-        }
+    &:active {
+        cursor: grabbing;
     }
 }
 
-.drag-ghost {
-    color: white !important;
-    cursor: grabbing !important;
-    font-size: 14px !important;
-}
-
+// Body & Cell Styles
 tbody {
     min-height: 300px;
 }
@@ -71,133 +67,23 @@ tbody {
     height: 100%;
 }
 
-::ng-deep .popover-body {
-    height: 150px;
-    width: 274px;
+// Drag & Drop Styles
+.drag-ghost {
+    color: white;
+    cursor: grabbing;
+    font-size: 14px;
 }
-
-.empty-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 300px;
-    position: relative;
-}
-
-.empty-row {
-    display: flex;
-    flex-direction: column;
-    height: 40px;
-    position: fixed;
-    left: 45%;
-
-    &-icon {
-        height: 50px;
-        padding-bottom: 0;
-    }
-
-    &-text {
-        color: #C3C3C3;
-    }
-}
-
-.loading-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 300px;
-    position: relative;
-}
-
-.loader {
-    width: 108px;
-    height: 16px;
-    background:
-        radial-gradient(circle 8px at 8px center, #b5b5b5 100%, transparent 0),
-        radial-gradient(circle 8px at 8px center, #b5b5b5 100%, transparent 0);
-    background-size: 16px 16px;
-    background-repeat: no-repeat;
-    position: fixed;
-    left: 45%;
-    animation: ballX 1s linear infinite;
-}
-
-.loader:before {
-    content: "";
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #b5b5b5;
-    inset: 0;
-    margin: auto;
-    animation: moveX 1s cubic-bezier(0.5, 300, 0.5, -300) infinite;
-}
-
-@keyframes ballX {
-
-    0%,
-    25%,
-    50%,
-    75%,
-    100% {
-        background-position: 25% 0, 75% 0
-    }
-
-    40% {
-        background-position: 25% 0, 85% 0
-    }
-
-    90% {
-        background-position: 15% 0, 75% 0
-    }
-}
-
-@keyframes moveX {
-    100% {
-        transform: translate(0.15px)
-    }
-}
-
-.resizer {
-    height: 100%;
-    width: 6px !important;
-    cursor: ew-resize;
-    position: absolute;
-    right: 0;
-    top: 0;
-    z-index: 10;
-
-    &:hover,
-    &:active {
-        background-color: rgba(255, 255, 255, 0.3);
-    }
-}
-
-.table> :not(caption)>*>* {
-    padding: 4px 10px 0 !important;
-}
-
-
-.dynamic-wrapper {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: stretch;
-    justify-content: stretch;
-}
-
 
 .row-dragging {
     opacity: 0.3;
 }
 
 .drag-over-above {
-    border-top: 2px solid #7499ff !important;
+    border-top: 2px solid #7499ff;
 }
 
 .drag-over-below {
-    border-bottom: 2px solid #7499ff !important;
+    border-bottom: 2px solid #7499ff;
 }
 
 .drag-handle-column {
@@ -223,12 +109,322 @@ tbody {
 }
 
 .row-drag-ghost {
-    background: #ffffff !important;
+    background: #ffffff;
     border-collapse: collapse;
 
     td {
-        background: #ffffff !important;
-        border: 1px solid #dee2e6 !important;
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+    }
+}
+
+// Resizer
+.resizer {
+    height: 100%;
+    width: 6px;
+    cursor: ew-resize;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 10;
+
+    &:hover,
+    &:active {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+}
+
+// Table Actions
+.table-actions {
+    position: absolute;
+    top: 80px;
+    right: 10px;
+    z-index: 20;
+
+    &.rtl {
+        right: auto;
+        left: 10px;
+    }
+}
+
+.actions-btn {
+    background: #00AF9E;
+    border: none;
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 175, 158, 0.3);
+
+    &:hover {
+        background: #009688;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 175, 158, 0.4);
     }
 
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+.dots {
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+    transform: rotate(90deg);
+    position: absolute;
+}
+
+.columns-menu-container {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+
+    .rtl & {
+        right: auto;
+        left: 0;
+    }
+}
+
+// Loading States
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    position: relative;
+}
+
+.loader {
+    width: 108px;
+    height: 16px;
+    background:
+        radial-gradient(circle 8px at 8px center, #00AF9E 100%, transparent 0),
+        radial-gradient(circle 8px at 8px center, #00AF9E 100%, transparent 0);
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    position: fixed;
+    left: 45%;
+    animation: ballX 1s linear infinite;
+}
+
+.loader:before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #00AF9E;
+    inset: 0;
+    margin: auto;
+    animation: moveX 1s cubic-bezier(0.5, 300, 0.5, -300) infinite;
+}
+
+@keyframes ballX {
+    0%, 25%, 50%, 75%, 100% {
+        background-position: 25% 0, 75% 0;
+    }
+    40% {
+        background-position: 25% 0, 85% 0;
+    }
+    90% {
+        background-position: 15% 0, 75% 0;
+    }
+}
+
+@keyframes moveX {
+    100% {
+        transform: translate(0.15px);
+    }
+}
+
+// Empty State
+.empty-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    position: relative;
+}
+
+.empty-row {
+    display: flex;
+    flex-direction: column;
+    height: 40px;
+    position: fixed;
+    left: 45%;
+
+    &-icon {
+        height: 50px;
+        padding-bottom: 0;
+    }
+
+    &-text {
+        color: #C3C3C3;
+    }
+}
+
+// Utility Classes
+.h-100 {
+    height: 100%;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+// Table Spacing
+.table > :not(caption) > * > * {
+    padding: 4px 10px;
+}
+
+// Dynamic Components
+.dynamic-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+// External Components
+::ng-deep .popover-body {
+    height: 150px;
+    width: 274px;
+}
+
+// pagination
+// Pagination Styles
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-top: 1px solid #e0e0e0;
+    background: #f8f9fa;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.pagination-info {
+    font-size: 14px;
+    color: #666;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-btn {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    
+    &:hover:not(.disabled) {
+        background: #00AF9E;
+        color: white;
+        border-color: #00AF9E;
+    }
+    
+    &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.page-numbers {
+    display: flex;
+    gap: 4px;
+}
+
+.page-number {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    min-width: 40px;
+    
+    &:hover {
+        background: #f0f0f0;
+    }
+    
+    &.active {
+        background: #00AF9E;
+        color: white;
+        border-color: #00AF9E;
+    }
+}
+
+.page-size-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    
+    label {
+        color: #666;
+    }
+    
+    select {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 6px 8px;
+        background: white;
+        cursor: pointer;
+        
+        &:focus {
+            outline: none;
+            border-color: #00AF9E;
+        }
+    }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .pagination-controls {
+        justify-content: center;
+    }
+    
+    .page-size-selector {
+        justify-content: center;
+    }
 }

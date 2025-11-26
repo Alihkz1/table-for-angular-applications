@@ -1,13 +1,13 @@
-import { ChangeDetectorRef, Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ElementRef } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ElementRef, AfterViewInit } from '@angular/core';
 import { IHeader } from '../shared/model/IHeader.interface';
 import { CommonModule } from '@angular/common';
 import { DynamicCellDirective } from '../shared/directive/dynamic-cell.directive';
 import { IRowEvent } from '../shared/model/IRowEvent.interface';
-import { ScheduleTableFilterColumnComponent } from './schedule-table-filter-column/schedule-table-filter-column.component';
 import { ScheduleTableService } from '../shared/service/schedule-table.service';
-import { Subject } from 'rxjs';
 import { ScheduleTableSortColumnComponent } from './schedule-table-sort-column/schedule-table-sort-column.component';
 import { ScrollingModule } from '@angular/cdk/scrolling';
+import { ColumnsVisibilityComponent } from './columns-visibility/columns-visibility.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'schedule-table',
@@ -15,25 +15,31 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
   imports: [
     CommonModule,
     DynamicCellDirective,
-    ScheduleTableFilterColumnComponent,
     ScheduleTableSortColumnComponent,
-    ScrollingModule
+    ScrollingModule,
+    ColumnsVisibilityComponent,
+    FormsModule
   ],
   providers: [ScheduleTableService],
   templateUrl: './schedule-table.component.html',
   styleUrl: './schedule-table.component.scss'
 })
-export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
+export class ScheduleTableComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() headers: IHeader[] = [];
   @Input() set data(data: any[]) { this.tableService.setDataSource = data; };
   @Input() rowHeight = 50;
   @Input() loading: boolean = false;
   @Input() direction: 'rtl' | 'ltr' = 'rtl';
+  @Input() themeColor: string = '#00AF9E';
   @Output() onRowEvent: EventEmitter<IRowEvent> = new EventEmitter();
   @Output() columnsReordered: EventEmitter<IHeader[]> = new EventEmitter();
   @Output() rowsReordered: EventEmitter<any[]> = new EventEmitter();
+  @Output() pageChanged = new EventEmitter<{ page: number, pageSize: number }>();
 
-  private _unSubscribe$ = new Subject<void>();
+  // New pagination inputs
+  @Input() pageSize: number = 10; // Number of items per page
+  @Input() showPagination: boolean = true; // Show/hide pagination
+  @Input() pageSizeOptions: number[] = [5, 10, 20, 50]; // Page size options
 
   // Column resize variables
   private resizing = false;
@@ -55,13 +61,20 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
   private dragRowGhost: HTMLElement | null = null;
   public dragOverRowIndex: number = -1;
 
+  // Add pagination properties
+  public currentPage: number = 1;
+  public totalPages: number = 1;
+  public paginatedData: any[] = [];
+
+  public showColumnsMenu = false;
+  private originalHeaders: IHeader[] = [];
+
+  public Math = Math;
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
-    // Check if resizer was clicked
     if ((event.target as Element).classList.contains('resizer')) {
       this.startColumnResize(event);
     }
-    // Check if column header was clicked for dragging (but not on resizer or filter/sort elements)
     else if ((event.target as Element).closest('th') &&
       !(event.target as Element).closest('.resizer') &&
       !(event.target as Element).closest('schedule-table-filter-column') &&
@@ -111,36 +124,125 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this._filterColumnsListener();
+    this.initializeHeadersVisibility();
+    this.updatePagination();
+  }
+
+  ngAfterViewInit(): void {
+    this.initializeScrollPosition();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['headers']) {
+      this.initializeHeadersVisibility();
+    }
     if (changes['direction']) {
+      this._cdr.detectChanges();
+      setTimeout(() => this.initializeScrollPosition(), 0);
+    }
+    if (changes['data'] || changes['pageSize']) {
+      this.updatePagination();
+    }
+  }
+
+  // Add pagination methods
+  private updatePagination(): void {
+    if (!this.tableService.dataSource || !this.showPagination) {
+      this.paginatedData = this.tableService.dataSource || [];
+      return;
+    }
+
+    const totalItems = this.tableService.dataSource.length;
+    this.totalPages = Math.ceil(totalItems / this.pageSize);
+    this.currentPage = Math.min(this.currentPage, this.totalPages) || 1;
+
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedData = this.tableService.dataSource.slice(startIndex, endIndex);
+  }
+
+  public goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      this.currentPage = page;
+      this.updatePagination();
+      this.pageChanged.emit({ page: this.currentPage, pageSize: this.pageSize });
       this._cdr.detectChanges();
     }
   }
 
-  ngOnDestroy(): void {
-    this._unSubscribe$.next();
-    this._unSubscribe$.complete();
+  public nextPage(): void {
+    this.goToPage(this.currentPage + 1);
   }
 
-  private _filterColumnsListener() {
-    // this.tableService.columnFiltersObs.pipe(takeUntil(this._unSubscribe$)).subscribe((result) => {
-    //   if (!Object.keys(result).length) {
-    //     this.tableService.setDataSource = [];
-    //     return;
-    //   }
-    //   let items: any[] = [];
-    //   Object.keys(result).forEach((key, i) => {
-    //     if (i === 0)
-    //       items = this.tableService.realDataSource.filter((el) => el[key]?.toLowerCase().includes(result[key]));
-    //     else if (i > 0)
-    //       items = items.filter((el) => el[key].toLowerCase().includes(result[key]));
-    //   });
-    //   this.tableService.setDataSource = items;
-    // });
+  public previousPage(): void {
+    this.goToPage(this.currentPage - 1);
   }
+
+  public onPageSizeChange(newSize: number): void {
+    this.pageSize = newSize;
+    this.currentPage = 1;
+    this.updatePagination();
+    this.pageChanged.emit({ page: this.currentPage, pageSize: this.pageSize });
+  }
+
+  get displayData(): any[] {
+    return this.showPagination ? this.paginatedData : this.tableService.dataSource;
+  }
+
+  private initializeScrollPosition(): void {
+    setTimeout(() => {
+      const tableWrapper = this._elementRef.nativeElement.querySelector('.table-wrapper');
+      if (tableWrapper) {
+        if (this.direction === 'rtl') {
+          // Scroll to the right for RTL
+          tableWrapper.scrollLeft = tableWrapper.scrollWidth;
+        } else {
+          // Scroll to the left for LTR (default)
+          tableWrapper.scrollLeft = 0;
+        }
+      }
+    }, 0);
+  }
+
+  private initializeHeadersVisibility(): void {
+    this.headers.forEach(header => {
+      if (header.visible === undefined) {
+        header.visible = true;
+      }
+    });
+    this.originalHeaders = JSON.parse(JSON.stringify(this.headers));
+  }
+
+  toggleColumnsMenu(): void {
+    this.showColumnsMenu = !this.showColumnsMenu;
+  }
+
+  onColumnToggled(header: IHeader): void {
+    this._cdr.detectChanges();
+  }
+
+  onSaveColumns(): void {
+    this.originalHeaders = JSON.parse(JSON.stringify(this.headers));
+    this.showColumnsMenu = false;
+    this._cdr.detectChanges();
+  }
+
+  onCancelColumns(): void {
+    this.headers = JSON.parse(JSON.stringify(this.originalHeaders));
+    this.showColumnsMenu = false;
+    this._cdr.detectChanges();
+  }
+
+  closeColumnsMenu(): void {
+    this.showColumnsMenu = false;
+  }
+
+  // Get visible headers for display
+  get visibleHeaders(): IHeader[] {
+    return this.headers.filter(header => header.visible !== false);
+  }
+
+  ngOnDestroy(): void { }
 
   // Column Resize Methods
   private startColumnResize(event: MouseEvent): void {
@@ -469,4 +571,25 @@ export class ScheduleTableComponent implements OnInit, OnChanges, OnDestroy {
   trackByHeader(index: number, header: IHeader): string {
     return header.key || index.toString();
   }
+
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+
+    // Adjust start page if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
 }
