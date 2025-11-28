@@ -1,7 +1,7 @@
 <div class="table-wrapper">
     <div class="table-actions" [class.rtl]="direction === 'rtl'">
-        <button class="actions-btn" (click)="toggleColumnsMenu()">
-            <span class="dots">•••</span>
+        <button class="table-actions-btn" (click)="toggleColumnsMenu()">
+            <span class="table-actions-btn-dots">•••</span>
         </button>
 
         <div class="columns-menu-container" *ngIf="showColumnsMenu">

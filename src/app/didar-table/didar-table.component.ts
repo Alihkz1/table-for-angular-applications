@@ -70,6 +70,11 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
 
   public Math = Math;
 
+  get visibleHeaders(): IHeader[] {
+    return this.headers.filter(header => header.visible !== false);
+  }
+
+
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     if ((event.target as Element).classList.contains('resizer')) {
@@ -142,6 +147,8 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
       this.currentPage = 1;
     }
   }
+
+  ngOnDestroy(): void { }
 
   private updatePagination(): void {
     if (!this.tableService.dataSource || !this.showPagination) {
@@ -231,12 +238,6 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
   closeColumnsMenu(): void {
     this.showColumnsMenu = false;
   }
-
-  get visibleHeaders(): IHeader[] {
-    return this.headers.filter(header => header.visible !== false);
-  }
-
-  ngOnDestroy(): void { }
 
   private startColumnResize(event: MouseEvent): void {
     this.resizing = true;
@@ -432,6 +433,7 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
 
     const rect = originalElement.getBoundingClientRect();
     this.dragRowGhost.style.position = 'fixed';
+    this.dragRowGhost.style.direction = this.direction;
     this.dragRowGhost.style.left = `${rect.left}px`;
     this.dragRowGhost.style.top = `${rect.top}px`;
     this.dragRowGhost.style.width = `${rect.width}px`;

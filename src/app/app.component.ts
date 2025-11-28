@@ -29,12 +29,12 @@ import { ActionsCellComponent } from './dynamic-cells/actions-cell/actions-cell.
 export class AppComponent implements OnInit {
   public headers: IHeader[] = [];
   public ACTIVITY_DATA = ACTIVITY_LIST
-  public mockDataLoading: boolean = true
+  public loading: boolean = true
 
   ngOnInit(): void {
     this._initHeaders();
     setTimeout(() => {
-      this.mockDataLoading = false
+      this.loading = false
     }, 1000);
   }
 
