@@ -1,16 +1,12 @@
-<div class="wrapper">
-    <button class="dots" (click)="toggleColumnsMenu()">
-        <span class="dots-dots">•••</span>
-    </button>
-
-    <div class="columns-list" *ngIf="showColumnsMenu">
-        <div *ngFor="let header of actionHeaders" class="column-item" (click)="onEvent(header.actionName)">
-            <div class="header-info">
-                <span class="column-title">{{ header.title }}</span>
+<div class="actions-wrapper">
+<button class="actions-trigger" (click)="toggleColumnsMenu($event)">
+    <span class="actions-icon">•••</span>
+</button>
+    <div class="actions-menu" *ngIf="showColumnsMenu">
+        <div *ngFor="let header of actionHeaders" class="menu-item">
+            <div class="menu-content" (click)="onEvent(header.actionName)">
+                <span class="menu-title">{{ header.title }}</span>
             </div>
         </div>
     </div>
 </div>
-
-<!-- <img class="img" src="assets/person-raised-hand.svg" alt="" (click)="onEvent('raise_hand')">
-<img class="img" src="assets/question-circle-fill.svg" alt="" (click)="onEvent('question')"> -->

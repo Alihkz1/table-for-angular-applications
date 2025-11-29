@@ -63,13 +63,11 @@
                                 [currentPageData]="displayData">
                             </didar-table-sort-column>
                         </div>
-                        <div class="d-flex h-100 align-items-center justify-content-between">
+                        <div class="header-controls">
                             <div class="column-drag-handle" (mousedown)="startColumnDrag($event, i)">
                                 ≡
                             </div>
-                            <div class="resizer" (mousedown)="resizeColumn_onMouseDown($event, i)"
-                                [attr.data-column-index]="i">
-                            </div>
+                            <div class="resizer" (mousedown)="startColumnResize($event, i)"></div>
                         </div>
                     </div>
                 </th>
@@ -85,7 +83,7 @@
                 <div class="empty-container">
                     <div class="empty-row">
                         <img src="assets/empty.svg" alt="" class="empty-row-icon">
-                        <p class="empty-row-text">No Data!</p>
+                        <p class="empty-row-text">دیتایی موجود نیست</p>
                     </div>
                 </div>
             </ng-container>

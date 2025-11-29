@@ -45,8 +45,9 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
   @Input() pageSizeOptions: number[] = [5, 10, 20, 50];
 
   private resizing = false;
-  private startX: number;
-  private startWidth: number;
+  private resizingColumnIndex: number = -1;
+  private startX: number = 0;
+  private startWidth: number = 0;
   private currentColumn: HTMLElement | null = null;
 
   public isDragging = false;
@@ -74,19 +75,10 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
     return this.headers.filter(header => header.visible !== false);
   }
 
-
-  @HostListener('mousedown', ['$event'])
-  onMouseDown(event: MouseEvent) {
-    if ((event.target as Element).classList.contains('resizer')) {
-      this.startColumnResize(event);
-    }
-  }
-
   @HostListener('document:mouseup', ['$event'])
   onMouseUp(event: MouseEvent) {
     if (this.resizing) {
-      this.resizing = false;
-      this.currentColumn = null;
+      this.finishColumnResize();
     }
 
     if (this.isDragging) {
@@ -100,7 +92,7 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
 
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
-    if (this.resizing && this.currentColumn) {
+    if (this.resizing) {
       this.handleColumnResize(event);
     }
 
@@ -239,37 +231,59 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
     this.showColumnsMenu = false;
   }
 
-  private startColumnResize(event: MouseEvent): void {
+  public startColumnResize(event: MouseEvent, columnIndex: number): void {
     this.resizing = true;
+    this.resizingColumnIndex = columnIndex;
     this.startX = event.clientX;
-    this.currentColumn = (event.target as Element).closest('th') as HTMLElement;
 
-    if (this.currentColumn) {
-      this.startWidth = this.currentColumn.offsetWidth;
-    }
+    const thElement = (event.target as Element).closest('th') as HTMLElement;
+    if (!thElement) return;
 
+    this.currentColumn = thElement;
+    this.startWidth = thElement.offsetWidth;
+
+    // Prevent text selection during resize
     event.preventDefault();
     event.stopPropagation();
+
+    document.body.classList.add('column-resizing-active');
   }
 
   private handleColumnResize(event: MouseEvent): void {
+    if (!this.resizing || !this.currentColumn) return;
+
     const deltaX = event.clientX - this.startX;
-    const newWidth = this.startWidth + deltaX;
-
+    let newWidth = this.startWidth;
+    newWidth = this.startWidth + deltaX;
     const minWidth = 50;
-    const finalWidth = Math.max(minWidth, newWidth);
+    const maxWidth = 800;
+    const finalWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
 
-    if (this.currentColumn) {
-      this.currentColumn.style.width = `${finalWidth}px`;
-      this.currentColumn.style.minWidth = `${finalWidth}px`;
+    // Apply the new width
+    this.currentColumn.style.width = `${finalWidth}px`;
+    this.currentColumn.style.minWidth = `${finalWidth}px`;
 
-      const columnIndex = Array.from(this.currentColumn.parentElement!.children).indexOf(this.currentColumn) - 1;
-      if (columnIndex >= 0 && columnIndex < this.headers.length) {
-        this.headers[columnIndex].width = finalWidth;
-      }
+    // Update the header configuration
+    if (this.resizingColumnIndex >= 0 && this.resizingColumnIndex < this.headers.length) {
+      this.headers[this.resizingColumnIndex].width = finalWidth;
     }
 
+    // Update the start position for continuous resizing
+    this.startX = event.clientX;
+    this.startWidth = finalWidth;
+
     event.preventDefault();
+  }
+
+  private finishColumnResize(): void {
+    this.resizing = false;
+    this.resizingColumnIndex = -1;
+    this.currentColumn = null;
+    this.startX = 0;
+    this.startWidth = 0;
+
+    // Remove the resizing class
+    document.body.classList.remove('column-resizing-active');
   }
 
   public startColumnDrag(event: MouseEvent, columnIndex: number): void {
@@ -548,11 +562,6 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
 
   public scroll_onChange() {
     this._cdr.detectChanges();
-  }
-
-  public resizeColumn_onMouseDown(event: MouseEvent, index: number) {
-    const resizer = event.currentTarget as HTMLElement;
-    resizer.setAttribute('data-column-index', index.toString());
   }
 
   trackByHeader(index: number, header: IHeader): string {

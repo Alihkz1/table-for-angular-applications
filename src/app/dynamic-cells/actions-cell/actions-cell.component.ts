@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 interface ActionHeader {
   title: string;
   actionName: string;
-  fields: string[];
 }
 
 @Component({
@@ -19,52 +18,60 @@ export class ActionsCellComponent implements OnDestroy {
   @Input() onRowEvent: EventEmitter<any>;
   @Input() headers: ActionHeader[] = [];
 
-  mouseDownEventListenerRef: any;
+  private mouseDownEventListener: (event: MouseEvent) => void;
   public showColumnsMenu = false;
 
   public actionHeaders: ActionHeader[] = [
     {
       title: 'ویرایش',
       actionName: 'view_user',
-      fields: ['name', 'email', 'phone']
     },
     {
       title: 'فعالیت انجام شد',
       actionName: 'view_order',
-      fields: ['order_id', 'amount', 'status']
     },
     {
       title: 'حذف',
       actionName: 'view_payment',
-      fields: ['payment_method', 'transaction_id']
     }
   ];
-  
+
   constructor() {
-    this.mouseDownEventListenerRef = document.addEventListener('mousedown', () => {
-      if (!this.showColumnsMenu) return
-      this.showColumnsMenu = false
-    })
+    this.mouseDownEventListener = this.handleDocumentClick.bind(this);
+    document.addEventListener('mousedown', this.mouseDownEventListener);
+  }
+
+  private handleDocumentClick(event: MouseEvent): void {
+    if (!this.showColumnsMenu) return;
+
+    const menuElement = document.querySelector('.actions-menu');
+    const triggerElement = document.querySelector('.actions-trigger');
+
+    if (menuElement &&
+      !menuElement.contains(event.target as Node) &&
+      !triggerElement?.contains(event.target as Node)) {
+      this.showColumnsMenu = false;
+    }
   }
 
   ngOnDestroy(): void {
-    document.removeEventListener('mousedown', this.mouseDownEventListenerRef)
+    document.removeEventListener('mousedown', this.mouseDownEventListener);
   }
 
   onEvent(action: string) {
     this.onRowEvent.emit({
       action,
       data: this.row
-    })
+    });
+    this.showColumnsMenu = false;
   }
 
-  toggleColumnsMenu() {
+  toggleColumnsMenu(event: Event) {
+    event.stopPropagation(); 
     this.showColumnsMenu = !this.showColumnsMenu;
   }
 
   closeColumnsMenu() {
     this.showColumnsMenu = false;
   }
-
 }
-
