@@ -159,38 +159,38 @@ tbody {
         left: 10px;
     }
 
-    &-btn {
-    background: #00AF9E;
-    border: none;
-    border-radius: 6px;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 175, 158, 0.3);
-
-    &:hover {
-        background: #009688;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 175, 158, 0.4);
-    }
-
-    &:active {
-        transform: translateY(0);
-    }
-
-    &-dots {
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    line-height: 1;
-    transform: rotate(90deg);
-    position: absolute;
-}
-}
+        &-btn {
+            background: #00AF9E;
+            border: none;
+            border-radius: 6px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 175, 158, 0.3);
+    
+            &:hover {
+                background: #009688;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 175, 158, 0.4);
+            }
+    
+            &:active {
+                transform: translateY(0);
+            }
+    
+            &-dots {
+                color: white;
+                font-size: 16px;
+                font-weight: bold;
+                line-height: 1;
+                transform: rotate(90deg);
+                position: absolute;
+            }
+        }
 }
 
 .columns-menu-container {
