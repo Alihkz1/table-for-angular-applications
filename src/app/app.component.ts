@@ -6,7 +6,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { ACTIVITY_LIST } from './shared/mock-data/MOCK_DATA';
+import { ACTIVITY_LIST, PAYMENT_LIST } from './shared/mock-data/MOCK_DATA';
 import { IHeader } from './didar-table/shared/model/IHeader.interface';
 import { IRowEvent } from './didar-table/shared/model/IRowEvent.interface';
 import { Router } from '@angular/router';
@@ -29,7 +29,7 @@ import { DealCellComponent } from './dynamic-cells/deal-cell/deal-cell.component
 })
 export class AppComponent implements OnInit {
   public headers: IHeader[] = [];
-  public ACTIVITY_DATA = ACTIVITY_LIST
+  public ACTIVITY_DATA = PAYMENT_LIST
   public loading: boolean = true
 
   constructor(private _router: Router) { }
@@ -49,7 +49,7 @@ export class AppComponent implements OnInit {
     console.log('onPageChange -> ', event)
   }
 
-   public onColumnToggle(headers: IHeader[]) {
+  public onColumnToggle(headers: IHeader[]) {
     const sessionStorageKey = this._router.url.split(';')[0];
     const visibilityConfig = headers.map(header => ({
       title: header.title,
@@ -60,12 +60,11 @@ export class AppComponent implements OnInit {
     sessionStorage.setItem(sessionStorageKey, JSON.stringify(visibilityConfig));
   }
 
-
   private _initTableConfig() {
     const sessionStorageKey = this._router.url.split(';')[0];
     const sessionCols = JSON.parse(sessionStorage.getItem(sessionStorageKey) || '{}');
 
-    const allHeaders = [
+    const allHeaders: IHeader[] = [
       {
         title: 'معامله',
         key: 'Deal',
@@ -92,6 +91,7 @@ export class AppComponent implements OnInit {
         key: 'Deal',
         sortable: false,
         width: 80,
+        valueFormatter: (d: any) => d.Price || 0
       },
       {
         title: 'مبلغ پرداخت',
@@ -117,22 +117,11 @@ export class AppComponent implements OnInit {
         key: 'takhir',
         sortable: false,
         width: 80,
+        valueFormatter: () => "بله"
       },
       {
         title: 'موعد پرداخت',
         key: 'DueDate',
-        sortable: false,
-        width: 80,
-      },
-      {
-        title: "تاریخ تایید پرداخت",
-        key: 'PayedDate',
-        sortable: false,
-        width: 80,
-      },
-      {
-        title: 'تایید کننده پرداخت',
-        key: 'PayerId',
         sortable: false,
         width: 80,
       },
@@ -153,9 +142,9 @@ export class AppComponent implements OnInit {
         key: 'PaymentNote',
         sortable: false,
         width: 350,
+        valueFormatter: (v) => v + v + v
       },
     ];
-
     this._setHeaders(sessionCols, allHeaders)
   }
 
