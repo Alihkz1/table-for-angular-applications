@@ -1,5 +1,9 @@
 @import "./assets/fonts/fonts.scss";
 
+:root {
+    --main-bg-color: #f7f7f7;
+    --main-border-color: #c6c6c6;
+}
 
 ::-webkit-scrollbar {
     width: 5px;
@@ -13,13 +17,14 @@
 ::-webkit-scrollbar-thumb {
     background: #888;
 
-    &:hover {   
+    &:hover {
         background: #555;
     }
 }
 
 
-html, body  {
+html,
+body {
     font-size: 14px;
-font-family: "Vazirmatn";
+    font-family: "Vazirmatn";
 }

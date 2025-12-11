@@ -1,3 +1,5 @@
+$border-color: var(--main-border-color);
+
 .table-wrapper {
     width: 100%;
     height: 100%;
@@ -5,7 +7,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
 }
 
 .table {
@@ -13,20 +15,28 @@
     min-width: 100%;
     margin: 0;
     table-layout: fixed;
+    border: 1px solid $border-color;
+    background: var(--main-bg-color);
+    border-top: none;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 6px;
 }
 
 thead {
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 5;
+    color: #808080;
 }
 
 th {
-    background: #00AF9E;
-    font-size: 14px;
-    color: white;
-    border-right: 1px solid #b5b5b5;
-    height: 55px;
+    background: var(--main-bg-color);
+    font-size: 12px;
+    font-weight: 700;
+    border-top: 1px solid $border-color !important;
+    border-bottom: 1px solid $border-color !important;
+    height: 45px;
     position: relative;
     user-select: none;
     -webkit-user-select: none;
@@ -55,12 +65,22 @@ tbody {
 }
 
 .cell {
-    border-left: 1px solid #b5b5b5;
     height: 100%;
+    width: 150px;
+
+    &-static {
+        height: 50px; // td-height
+        display: flex;
+        align-items: center;
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
 }
 
 .drag-ghost {
-    color: white;
+    color: var(--main-bg-color);
     cursor: grabbing;
     font-size: 14px;
 }
@@ -81,14 +101,19 @@ tbody {
     width: 40px;
     min-width: 40px;
     cursor: default;
+    position: sticky;
+    top: 3px;
+    z-index: 10;
+    right: 10px;
 }
 
 .drag-handle-cell {
-    width: 40px;
-    min-width: 40px;
+    width: 30px;
+    min-width: 30px;
     cursor: grab;
     text-align: center;
     background: #f8f9fa;
+    padding-top: 17px !important;
 
     &:hover {
         background: #e9ecef;
@@ -100,18 +125,17 @@ tbody {
 }
 
 .row-drag-ghost {
-    background: #ffffff;
+    background: var(--main-bg-color);
     border-collapse: collapse;
 
     td {
-        background: #ffffff;
-        border: 1px solid #dee2e6;
+        background: var(--main-bg-color);
+        border: 1px solid $border-color;
     }
 }
 
 .column-drag-handle {
-    width: 20px;
-    height: 20px;
+    width: 10px;
     cursor: grab;
     display: flex;
     align-items: center;
@@ -121,13 +145,12 @@ tbody {
     background: rgba(255, 255, 255, 0.2);
     transition: all 0.2s ease;
     font-size: 14px;
-    color: white;
-    
+
     &:hover {
         background: rgba(255, 255, 255, 0.3);
         cursor: grabbing;
     }
-    
+
     &:active {
         cursor: grabbing;
     }
@@ -150,57 +173,50 @@ tbody {
 
 .table-actions {
     position: absolute;
-    top: 80px;
-    right: 10px;
+    top: 4px;
+    right: 0;
     z-index: 20;
 
     &.rtl {
-        right: auto;
-        left: 10px;
+        left: auto;
+        right: -17px;
     }
 
-        &-btn {
-            background: #00AF9E;
-            border: none;
-            border-radius: 6px;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(0, 175, 158, 0.3);
-    
-            &:hover {
-                background: #009688;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(0, 175, 158, 0.4);
-            }
-    
-            &:active {
-                transform: translateY(0);
-            }
-    
-            &-dots {
-                color: white;
-                font-size: 16px;
-                font-weight: bold;
-                line-height: 1;
-                transform: rotate(90deg);
-                position: absolute;
-            }
+    &-btn {
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:active {
+            transform: translateY(0);
         }
+
+        &-dots {
+            color: var(--main-border-color);
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 1;
+            transform: rotate(90deg);
+            position: absolute;
+        }
+    }
 }
 
 .columns-menu-container {
     position: absolute;
     top: 100%;
-    right: 0;
+    right: 230px;
     margin-top: 8px;
 
     .rtl & {
-        right: auto;
+        right: 10px;
         left: 0;
     }
 }
@@ -239,12 +255,19 @@ tbody {
 }
 
 @keyframes ballX {
-    0%, 25%, 50%, 75%, 100% {
+
+    0%,
+    25%,
+    50%,
+    75%,
+    100% {
         background-position: 25% 0, 75% 0;
     }
+
     40% {
         background-position: 25% 0, 85% 0;
     }
+
     90% {
         background-position: 15% 0, 75% 0;
     }
@@ -307,9 +330,9 @@ tbody {
     align-items: center;
 }
 
-.table > :not(caption) > * > * {
-    padding: 4px 10px;
-}
+// .table> :not(caption)>*>* {
+// padding: 0px 10px;
+// }
 
 .dynamic-wrapper {
     width: 100%;
@@ -317,11 +340,6 @@ tbody {
     display: flex;
     align-items: stretch;
     justify-content: stretch;
-}
-
-::ng-deep .popover-body {
-    height: 150px;
-    width: 274px;
 }
 
 .pagination-container {
@@ -332,7 +350,7 @@ tbody {
     background: #f8f9fa;
     flex-wrap: wrap;
     gap: 16px;
-width: fit-content;
+    width: fit-content;
 }
 
 .pagination-info {
@@ -347,20 +365,20 @@ width: fit-content;
 }
 
 .pagination-btn {
-    background: white;
-    border: 1px solid #ddd;
+    background: var(--main-bg-color);
+    border: 1px solid $border-color;
     border-radius: 4px;
     padding: 8px 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 14px;
-    
+
     &:hover:not(.disabled) {
         background: #00AF9E;
-        color: white;
+        color: var(--main-bg-color);
         border-color: #00AF9E;
     }
-    
+
     &.disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -373,22 +391,22 @@ width: fit-content;
 }
 
 .page-number {
-    background: white;
-    border: 1px solid #ddd;
+    background: var(--main-bg-color);
+    border: 1px solid $border-color;
     border-radius: 4px;
     padding: 8px 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 14px;
     min-width: 40px;
-    
+
     &:hover {
         background: #f0f0f0;
     }
-    
+
     &.active {
         background: #00AF9E;
-        color: white;
+        color: var(--main-bg-color);
         border-color: #00AF9E;
     }
 }
@@ -398,18 +416,19 @@ width: fit-content;
     align-items: center;
     gap: 8px;
     font-size: 14px;
-    
+    white-space: nowrap;
+
     label {
         color: #666;
     }
-    
+
     select {
-        border: 1px solid #ddd;
+        border: 1px solid $border-color;
         border-radius: 4px;
         padding: 6px 8px;
-        background: white;
+        background: var(--main-bg-color);
         cursor: pointer;
-        
+
         &:focus {
             outline: none;
             border-color: #00AF9E;
@@ -423,12 +442,166 @@ width: fit-content;
         align-items: stretch;
         gap: 12px;
     }
-    
+
     .pagination-controls {
         justify-content: center;
     }
-    
+
     .page-size-selector {
         justify-content: center;
     }
+}
+
+tbody {
+    tr {
+        transition: background-color 0.2s ease;
+        background: var(--main-bg-color);
+
+        // &:hover {
+        //     background-color: #fff9c4 !important; // Yellow background
+        // }
+
+        // &:hover td {
+        //     background-color: #fff9c4 !important;
+        // }
+
+        // &:hover .drag-handle-cell {
+        //     background-color: #fff176 !important; 
+        // }
+
+        // &.row-dragging:hover,
+        // &.row-dragging:hover td {
+        //     background-color: inherit !important;
+        // }
+    }
+}
+
+tbody {
+    tr {
+        transition: background-color 0.2s ease;
+
+        // &:hover {
+        //     background-color: #fffbd9 !important;
+        // }
+
+        // &:hover td {
+        //     background-color: #fffcdc !important;
+        // }
+
+        // &:hover .drag-handle-cell {
+        //     background-color: #fffad0 !important;
+        // }
+
+        // &.row-dragging:hover,
+        // &.row-dragging:hover td {
+        //     background-color: inherit !important;
+        // }
+    }
+}
+
+tbody {
+    tr {
+        .cell {
+            transition: background-color 0.2s ease;
+
+            // &:hover {
+            //     background-color: #fff9c4 !important;
+            // }
+        }
+
+        // .drag-handle-cell:hover {
+        //     background-color: #fff176 !important;
+        // }
+    }
+}
+
+.first-th {
+    padding-right: 24px !important;
+}
+
+.skeleton-container {
+    tr {
+        &:hover {
+            background-color: transparent !important;
+
+            td {
+                background-color: transparent !important;
+            }
+        }
+    }
+}
+
+.skeleton-cell {
+    padding: 8px 10px !important;
+    vertical-align: middle;
+    height: 50px;
+
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s infinite;
+        border-radius: 4px;
+
+        &-rect {
+            height: 20px;
+        }
+    }
+}
+
+.skeleton-cell:nth-child(1) .skeleton-rect {
+    height: 24px;
+}
+
+.skeleton-cell:nth-child(2) .skeleton-rect {
+    height: 20px;
+}
+
+.skeleton-cell:nth-child(3) .skeleton-rect {
+    height: 18px;
+}
+
+.skeleton-cell:nth-child(4) .skeleton-rect {
+    height: 22px;
+}
+
+.skeleton-cell:nth-child(5) .skeleton-rect {
+    height: 20px;
+}
+
+.skeleton-container tr:nth-child(odd) .skeleton {
+    animation-delay: 0.1s;
+}
+
+.skeleton-container tr:nth-child(even) .skeleton {
+    animation-delay: 0.2s;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+@keyframes skeleton-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.skeleton-pulse {
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.loading-container {
+    display: none;
 }

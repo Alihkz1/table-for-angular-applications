@@ -3,7 +3,6 @@ export interface IHeader {
     key: string,
     width?: number,
     sortable?: boolean,
-    filterable?: boolean,
     asc?: boolean,
     dynamicCellComponent?: any,
     className?: string,

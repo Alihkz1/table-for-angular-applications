@@ -1,0 +1,13 @@
+.wrapper {
+    width: 110px;
+}
+
+.wrapper-link {
+    color: #0572e7 !important;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

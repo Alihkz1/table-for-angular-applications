@@ -1,60 +1,75 @@
-import { ChangeDetectorRef, Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ElementRef, AfterViewInit } from '@angular/core';
-import { IHeader } from '../shared/model/IHeader.interface';
+import { ChangeDetectorRef, Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, ElementRef, AfterViewInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DynamicCellDirective } from '../shared/directive/dynamic-cell.directive';
-import { IRowEvent } from '../shared/model/IRowEvent.interface';
-import { DidarTableService } from '../shared/service/didar-table.service';
 import { DidarTableSortColumnComponent, SORT_ENUM } from './didar-table-sort-column/didar-table-sort-column.component';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { ColumnsVisibilityComponent } from './columns-visibility/columns-visibility.component';
 import { FormsModule } from '@angular/forms';
+import { DynamicCellDirective } from './shared/directive/dynamic-cell.directive';
+import { DidarTableService } from './shared/service/didar-table.service';
+import { IHeader } from './shared/model/IHeader.interface';
+import { IRowEvent } from './shared/model/IRowEvent.interface';
+import { prepareForSorting, tryParseNumber } from './shared/utility/didar-table.utility';
+
+
+enum DIDAR_TABLE_DIRECTION {
+  LTR = 'ltr',
+  RTL = 'rtl'
+}
+
 
 @Component({
   selector: 'didar-table',
   standalone: true,
   imports: [
+    FormsModule,
+    ScrollingModule,
     CommonModule,
     DynamicCellDirective,
-    DidarTableSortColumnComponent,
-    ScrollingModule,
     ColumnsVisibilityComponent,
-    FormsModule
+    DidarTableSortColumnComponent,
   ],
   providers: [DidarTableService],
   templateUrl: './didar-table.component.html',
-  styleUrl: './didar-table.component.scss'
+  styleUrl: './didar-table.component.scss',
+  encapsulation: ViewEncapsulation.Emulated,
 })
-export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() headers: IHeader[] = [];
-  private originalData: any[] = [];
   @Input() set data(data: any[]) {
     this.tableService.setDataSource = data;
-    this.originalData = [...data];
   };
+  @Input() loading = false;
   @Input() rowHeight = 50;
-  @Input() loading: boolean = false;
-  @Input() direction: 'rtl' | 'ltr' = 'rtl';
-  @Input() themeColor: string = '#00AF9E';
+  @Input() colsReorder = false;
+  @Input() rowsReorder = false;
+  @Input() colsResizing = false;
+  @Input() direction: DIDAR_TABLE_DIRECTION = DIDAR_TABLE_DIRECTION.RTL;
+
+  @Output() sortChange = new EventEmitter()
+  @Output() rowsReordered: EventEmitter<any[]> = new EventEmitter();
   @Output() onRowEvent: EventEmitter<IRowEvent> = new EventEmitter();
   @Output() columnsReordered: EventEmitter<IHeader[]> = new EventEmitter();
-  @Output() rowsReordered: EventEmitter<any[]> = new EventEmitter();
   @Output() pageChanged = new EventEmitter<{ page: number, pageSize: number }>();
 
+  /* pageSize  */
   @Input() pageSize: number = 10;
-  @Input() showPagination: boolean = true;
+  @Input() showPagination: boolean = false;
   @Input() pageSizeOptions: number[] = [5, 10, 20, 50];
+  @Output() columnToggled = new EventEmitter<IHeader[]>();
+
+  public skeletonRows: number[] = [];
 
   private resizing = false;
-  private resizingColumnIndex: number = -1;
   private startX: number = 0;
   private startWidth: number = 0;
+  private resizingColumnIndex: number = -1;
   private currentColumn: HTMLElement | null = null;
 
   public isDragging = false;
+  public dragOverIndex: number = -1;
   public dragColumnIndex: number = -1;
   private dragColumn: HTMLElement | null = null;
   private dragGhost: HTMLElement | null = null;
-  public dragOverIndex: number = -1;
 
   public isRowDragging = false;
   public dragRowIndex: number = -1;
@@ -67,9 +82,10 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
   public paginatedData: any[] = [];
 
   public showColumnsMenu = false;
-  private originalHeaders: IHeader[] = [];
 
-  public Math = Math;
+  public get Math() {
+    return Math
+  };
 
   get visibleHeaders(): IHeader[] {
     return this.headers.filter(header => header.visible !== false);
@@ -108,18 +124,19 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
   }
 
   constructor(
+    private _elementRef: ElementRef,
     private _cdr: ChangeDetectorRef,
     public tableService: DidarTableService,
-    private _elementRef: ElementRef
   ) { }
 
   ngOnInit(): void {
     this.initializeHeadersVisibility();
     this.updatePagination();
-    this.tableService.dataSourceObs.subscribe((res) => {
+    this.tableService.dataSourceObs.subscribe(() => {
       this.currentPage = 1;
       this.updatePagination();
     });
+    this.skeletonRows = Array(this.pageSize).fill(0).map((_, i) => i);
   }
 
   ngAfterViewInit(): void {
@@ -138,9 +155,10 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
       this.updatePagination();
       this.currentPage = 1;
     }
+    if (changes['pageSize']) {
+      this.skeletonRows = Array(this.pageSize).fill(0).map((x, i) => i);
+    }
   }
-
-  ngOnDestroy(): void { }
 
   private updatePagination(): void {
     if (!this.tableService.dataSource || !this.showPagination) {
@@ -204,29 +222,32 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
         header.visible = true;
       }
     });
-    this.originalHeaders = JSON.parse(JSON.stringify(this.headers));
   }
 
   toggleColumnsMenu(): void {
     this.showColumnsMenu = !this.showColumnsMenu;
   }
 
-  onColumnToggled(header: IHeader): void {
+  onColumnToggled(headers: IHeader[]): void {
     this._cdr.detectChanges();
+    this.columnToggled.emit(headers)
+  }
+
+  onColumnSortChange(event: any) {
+    this.sortChange.emit(event)
   }
 
   onSaveColumns(): void {
-    this.originalHeaders = JSON.parse(JSON.stringify(this.headers));
-    this.showColumnsMenu = false;
-    this._cdr.detectChanges();
+    // this.originalHeaders = JSON.parse(JSON.stringify(this.headers));
+    // this.showColumnsMenu = false;
+    // this._cdr.detectChanges();
   }
 
   onCancelColumns(): void {
-    this.headers = JSON.parse(JSON.stringify(this.originalHeaders));
+    // this.headers = this.deepCloneHeaders(this.originalHeaders);
     this.showColumnsMenu = false;
     this._cdr.detectChanges();
   }
-
   closeColumnsMenu(): void {
     this.showColumnsMenu = false;
   }
@@ -242,7 +263,6 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
     this.currentColumn = thElement;
     this.startWidth = thElement.offsetWidth;
 
-    // Prevent text selection during resize
     event.preventDefault();
     event.stopPropagation();
 
@@ -286,18 +306,30 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
     document.body.classList.remove('column-resizing-active');
   }
 
-  public startColumnDrag(event: MouseEvent, columnIndex: number): void {
+  public startColumnDrag(event: MouseEvent, visibleColumnIndex: number): void {
     const thElement = (event.target as Element).closest('th') as HTMLElement;
     if (!thElement) return;
 
+    // Convert visible index to actual header index
+    const actualHeaderIndex = this.getActualHeaderIndex(visibleColumnIndex);
+    if (actualHeaderIndex === -1) return;
+
     this.isDragging = true;
     this.dragColumn = thElement;
-    this.dragColumnIndex = columnIndex;
+    this.dragColumnIndex = actualHeaderIndex; // Store the actual index, not visible index
 
     this.createDragGhost(thElement, event.clientX, event.clientY);
     thElement.classList.add('column-dragging');
     event.preventDefault();
     event.stopPropagation();
+  }
+
+  private getActualHeaderIndex(visibleIndex: number): number {
+    const visibleHeaders = this.visibleHeaders;
+    if (visibleIndex < 0 || visibleIndex >= visibleHeaders.length) return -1;
+
+    const visibleHeader = visibleHeaders[visibleIndex];
+    return this.headers.findIndex(header => header === visibleHeader);
   }
 
   private createDragGhost(originalElement: HTMLElement, clientX: number, clientY: number): void {
@@ -314,9 +346,11 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
     this.dragGhost.style.opacity = '0.9';
     this.dragGhost.style.pointerEvents = 'none';
     this.dragGhost.style.cursor = 'grabbing';
+    this.dragGhost.style.padding = '4px';
     this.dragGhost.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
-    this.dragGhost.style.background = '#00AF9E';
-    this.dragGhost.style.border = '2px solid #0d8377';
+    this.dragGhost.style.background = '#fff';
+    this.dragGhost.style.color = '#000';
+    this.dragGhost.style.border = '2px solid #e4e4e4';
     this.dragGhost.style.borderRadius = '4px';
     this.dragGhost.style.transform = 'rotate(2deg) scale(1.02)';
     this.dragGhost.style.transition = 'none';
@@ -396,8 +430,12 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
   }
 
   private finishColumnDrag(): void {
-    if (this.dragColumnIndex !== this.dragOverIndex && this.dragOverIndex !== -1) {
-      this.reorderColumns(this.dragColumnIndex, this.dragOverIndex);
+    if (this.dragColumnIndex !== -1 && this.dragOverIndex !== -1) {
+      const actualDragOverIndex = this.getActualHeaderIndex(this.dragOverIndex);
+
+      if (this.dragColumnIndex !== actualDragOverIndex && actualDragOverIndex !== -1) {
+        this.reorderColumns(this.dragColumnIndex, actualDragOverIndex);
+      }
     }
     this.cleanupColumnDrag();
     this._cdr.detectChanges();
@@ -458,7 +496,7 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
     this.dragRowGhost.style.cursor = 'grabbing';
     this.dragRowGhost.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
     this.dragRowGhost.style.background = '#ffffff';
-    this.dragRowGhost.style.border = '1px solid #0d8377';
+    this.dragRowGhost.style.border = '1px solid #e4e4e4';
     this.dragRowGhost.style.transition = 'none';
 
     const dragHandle = this.dragRowGhost.querySelector('.drag-handle-cell');
@@ -468,15 +506,12 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
 
     document.body.appendChild(this.dragRowGhost);
 
-    const ghostRect = this.dragRowGhost.getBoundingClientRect();
     this.dragRowGhost.style.left = `${rect.left}px`;
     this.dragRowGhost.style.top = `${clientY - 10}px`;
   }
 
   private updateRowDragGhostPosition(event: MouseEvent): void {
     if (!this.dragRowGhost) return;
-
-    const rect = this.dragRowGhost.getBoundingClientRect();
     this.dragRowGhost.style.top = `${event.clientY - 10}px`;
   }
 
@@ -560,11 +595,7 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
     this.dragOverRowIndex = -1;
   }
 
-  public scroll_onChange() {
-    this._cdr.detectChanges();
-  }
-
-  trackByHeader(index: number, header: IHeader): string {
+  public trackByHeader(index: number, header: IHeader): string {
     return header.key || index.toString();
   }
 
@@ -587,9 +618,7 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
   }
 
   public sortCurrentPage(header: IHeader, mode: SORT_ENUM): void {
-    if (!this.displayData || this.displayData.length === 0) {
-      return;
-    }
+    if (!this.displayData || !this.displayData.length) return;
 
     const sortedPageData = [...this.displayData].sort((a, b) => {
       const valueA = a[header.key];
@@ -599,15 +628,15 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
       if (valueA == null) return mode === SORT_ENUM.ASC ? -1 : 1;
       if (valueB == null) return mode === SORT_ENUM.ASC ? 1 : -1;
 
-      const numA = this.tryParseNumber(valueA);
-      const numB = this.tryParseNumber(valueB);
+      const numA = tryParseNumber(valueA);
+      const numB = tryParseNumber(valueB);
 
       if (numA !== null && numB !== null) {
         return mode === SORT_ENUM.ASC ? numA - numB : numB - numA;
       }
 
-      const stringA = this.prepareForSorting(valueA);
-      const stringB = this.prepareForSorting(valueB);
+      const stringA = prepareForSorting(valueA);
+      const stringB = prepareForSorting(valueB);
 
       const comparison = stringA.localeCompare(stringB, 'fa-IR', {
         sensitivity: 'base',
@@ -619,30 +648,5 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit, On
     });
 
     this.paginatedData = sortedPageData;
-  }
-
-  private tryParseNumber(value: any): number | null {
-    if (typeof value === 'number') return value;
-
-    if (typeof value === 'string') {
-      const normalized = value
-        .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString())
-        .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
-
-      const num = parseFloat(normalized.replace(/[^\d.-]/g, ''));
-      return isNaN(num) ? null : num;
-    }
-
-    return null;
-  }
-
-  private prepareForSorting(value: any): string {
-    if (value == null) return '';
-
-    const stringValue = String(value).trim();
-
-    return stringValue
-      .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString())
-      .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
   }
 }

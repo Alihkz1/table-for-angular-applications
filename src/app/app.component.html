@@ -1,5 +1,6 @@
 <div class="wrapper">
-  <didar-table [data]="ACTIVITY_DATA" [headers]="headers" [loading]="loading" (onRowEvent)="table_onRowEvent($event)"
-    [pageSize]="10" [showPagination]="true" [pageSizeOptions]="[5, 10, 25, 50]" (pageChanged)="onPageChange($event)">
+  <didar-table [data]="ACTIVITY_DATA" [headers]="headers" [loading]="loading" [pageSize]="10" [showPagination]="true"
+    [pageSizeOptions]="[5, 10, 25, 50]" (onRowEvent)="table_onRowEvent($event)" (columnToggled)="onColumnToggle($event)"
+    (pageChanged)="onPageChange($event)">
   </didar-table>
 </div>
