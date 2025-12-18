@@ -1,111 +1,109 @@
-<div class="table-wrapper">
-    <table class="table" [dir]="direction">
-        <thead>
+<table class="table" [dir]="direction">
+    <thead>
 
-            <!-- columns display checkbox list -->
+        <!-- columns display checkbox list -->
 
-            <div class="drag-handle-column">
-                <div class="table-actions" [class.rtl]="direction === 'rtl'">
-                    <button class="table-actions-btn" (click)="toggleColumnsMenu()">
-                        <span class="table-actions-btn-dots">•••</span>
-                    </button>
-                    <div class="columns-menu-container" *ngIf="showColumnsMenu">
-                        <app-columns-visibility [headers]="headers" (columnToggled)="onColumnToggled($event)"
-                            (onSave)="onSaveColumns()" (onClose)="onCancelColumns()">
-                        </app-columns-visibility>
-                    </div>
+        <div class="drag-handle-column">
+            <div class="table-actions" [class.rtl]="direction === 'rtl'">
+                <button class="table-actions-btn" (click)="toggleColumnsMenu()">
+                    <span class="table-actions-btn-dots">•••</span>
+                </button>
+                <div class="columns-menu-container" *ngIf="showColumnsMenu">
+                    <app-columns-visibility [headers]="headers" (columnToggled)="onColumnToggled($event)"
+                        (onSave)="onSaveColumns()" (onClose)="onCancelColumns()">
+                    </app-columns-visibility>
                 </div>
             </div>
+        </div>
 
-            <tr class="thead-tr">
-                
-                @if(rowsReorder) {
-                <th class="th">
-                </th>
-                }
+        <tr class="thead-tr">
 
-                <th class="th" *ngFor="let header of visibleHeaders; let i = index" [ngClass]="header.className ?? ''"
-                    [class.column-dragging]="i === dragColumnIndex" [class.drag-over-left]="dragOverIndex === i"
-                    [class.drag-over-right]="dragOverIndex === i + 1" [style.width.px]="header.width"
-                    [style.width.px]="header.width">
-                    <div class="h-100 d-flex align-items-center justify-content-between" [class.first-th]="i===0">
-                        <div class="header-content">
-                            <span>
-                                {{ header.title }}
-                            </span>
-                            <didar-table-sort-column *ngIf="header.sortable" [header]="header"
-                                [currentPageData]="displayData" (sortChange)="onColumnSortChange($event)">
-                            </didar-table-sort-column>
-                        </div>
-                        <div class="header-controls">
-                            @if(colsReorder){
-                            <div class="column-drag-handle" (mousedown)="startColumnDrag($event, i)">
-                                ≡
-                            </div>
-                            }
-                            @if(colsResizing){
-                            <div class="resizer" (mousedown)="startColumnResize($event, i)"></div>
-                            }
-                        </div>
+            @if(rowsReorder) {
+            <th class="th">
+            </th>
+            }
+
+            <th class="th" *ngFor="let header of visibleHeaders; let i = index" [ngClass]="header.className ?? ''"
+                [class.column-dragging]="i === dragColumnIndex" [class.drag-over-left]="dragOverIndex === i"
+                [class.drag-over-right]="dragOverIndex === i + 1" [style.width.px]="header.width"
+                [style.width.px]="header.width">
+                <div class="h-100 d-flex align-items-center justify-content-between" [class.first-th]="i===0">
+                    <div class="header-content">
+                        <span>
+                            {{ header.title }}
+                        </span>
+                        <didar-table-sort-column *ngIf="header.sortable" [header]="header"
+                            [currentPageData]="displayData" (sortChange)="onColumnSortChange($event)">
+                        </didar-table-sort-column>
                     </div>
-                </th>
-            </tr>
-        </thead>
-
-        <!-- Skeleton Loading -->
-        <ng-container *ngIf="loading">
-            <tbody class="skeleton-container">
-                <tr *ngFor="let row of skeletonRows; let i = index">
-                    @if(rowsReorder) {
-                    <td class="cell skeleton-cell drag-handle-cell">
-                        <div class="skeleton skeleton-rect"></div>
-                    </td>
-                    }
-                    <td *ngFor="let header of visibleHeaders; trackBy: trackByHeader" class="cell skeleton-cell"
-                        [style.width.px]="header.width">
-                        <div class="skeleton skeleton-rect"></div>
-                    </td>
-                </tr>
-            </tbody>
-        </ng-container>
-
-        <!-- Actual Data -->
-        <ng-container *ngIf="!loading">
-            <ng-container *ngIf="displayData.length === 0; else dataHasLength">
-                <div class="empty-container">
-                    <div class="empty-row">
-                        <img src="assets/didar-table-assets/empty.svg" alt="" class="empty-row-icon">
-                        <p class="empty-row-text">دیتایی موجود نیست</p>
+                    <div class="header-controls">
+                        @if(colsReorder){
+                        <div class="column-drag-handle" (mousedown)="startColumnDrag($event, i)">
+                            ≡
+                        </div>
+                        }
+                        @if(colsResizing){
+                        <div class="resizer" (mousedown)="startColumnResize($event, i)"></div>
+                        }
                     </div>
                 </div>
-            </ng-container>
-            <ng-template #dataHasLength>
-                <tbody class="h-100 w-100 overflow-auto">
-                    <ng-container *ngFor="let row of displayData; let i = index">
-                        <tr [ngStyle]="{ 'height' : rowHeight + 'px'}" [class.row-dragging]="i === dragRowIndex"
-                            [class.drag-over-above]="dragOverRowIndex === i"
-                            [class.drag-over-below]="dragOverRowIndex === i + 1">
-                            @if(rowsReorder) {
-                            <td class="cell drag-handle-cell" (mousedown)="startRowDrag($event, i)">
-                                ≡
-                            </td>
-                            }
-                            <td *ngFor="let header of visibleHeaders; trackBy: trackByHeader" class="cell"
-                                [ngClass]="header.className ?? ''" [style.width.px]="header.width">
-                                <div *ngIf="header.dynamicCellComponent" [column]="header" [row]="row"
-                                    [onRowEvent]="onRowEvent" [component]="header.dynamicCellComponent" dynamicCell>
-                                </div>
-                                <div *ngIf="!header.dynamicCellComponent">
-                                    <div class="cell-static ellipsis-single">
-                                        {{ header.valueFormatter ? header.valueFormatter(row[header.key], row) :
-                                        row[header.key] }}
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </ng-container>
-                </tbody>
-            </ng-template>
+            </th>
+        </tr>
+    </thead>
+
+    <!-- Skeleton Loading -->
+    <ng-container *ngIf="loading">
+        <tbody class="skeleton-container">
+            <tr *ngFor="let row of skeletonRows; let i = index">
+                @if(rowsReorder) {
+                <td class="cell skeleton-cell drag-handle-cell">
+                    <div class="skeleton skeleton-rect"></div>
+                </td>
+                }
+                <td *ngFor="let header of visibleHeaders; trackBy: trackByHeader" class="cell skeleton-cell"
+                    [style.width.px]="header.width">
+                    <div class="skeleton skeleton-rect"></div>
+                </td>
+            </tr>
+        </tbody>
+    </ng-container>
+
+    <!-- Actual Data -->
+    <ng-container *ngIf="!loading">
+        <ng-container *ngIf="displayData.length === 0; else dataHasLength">
+            <div class="empty-container">
+                <div class="empty-row">
+                    <img src="assets/didar-table-assets/empty.svg" alt="" class="empty-row-icon">
+                    <p class="empty-row-text">دیتایی موجود نیست</p>
+                </div>
+            </div>
         </ng-container>
-    </table>
-</div>
+        <ng-template #dataHasLength>
+            <tbody class="h-100 w-100 overflow-auto">
+                <ng-container *ngFor="let row of displayData; let i = index">
+                    <tr [ngStyle]="{ 'height' : rowHeight + 'px'}" [class.row-dragging]="i === dragRowIndex"
+                        [class.drag-over-above]="dragOverRowIndex === i"
+                        [class.drag-over-below]="dragOverRowIndex === i + 1">
+                        @if(rowsReorder) {
+                        <td class="cell drag-handle-cell" (mousedown)="startRowDrag($event, i)">
+                            ≡
+                        </td>
+                        }
+                        <td *ngFor="let header of visibleHeaders; trackBy: trackByHeader" class="cell"
+                            [ngClass]="header.className ?? ''" [style.width.px]="header.width">
+                            <div *ngIf="header.dynamicCellComponent" [column]="header" [row]="row"
+                                [onRowEvent]="onRowEvent" [component]="header.dynamicCellComponent" dynamicCell>
+                            </div>
+                            <div *ngIf="!header.dynamicCellComponent">
+                                <div class="cell-static ellipsis-single">
+                                    {{ header.valueFormatter ? header.valueFormatter(row[header.key], row) :
+                                    row[header.key] }}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-container>
+            </tbody>
+        </ng-template>
+    </ng-container>
+</table>

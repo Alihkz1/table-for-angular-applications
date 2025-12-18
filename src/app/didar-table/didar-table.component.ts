@@ -11,11 +11,6 @@ import { IRowEvent } from './shared/model/IRowEvent.interface';
 import { prepareForSorting, tryParseNumber } from './shared/utility/didar-table.utility';
 
 
-enum DIDAR_TABLE_DIRECTION {
-  LTR = 'ltr',
-  RTL = 'rtl'
-}
-
 
 @Component({
   selector: 'didar-table',
@@ -40,10 +35,10 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit {
   };
   @Input() loading = false;
   @Input() rowHeight = 50;
-  @Input() colsReorder = false;
-  @Input() rowsReorder = false;
+  @Input() colsReorder = true;
+  @Input() rowsReorder = true;
   @Input() colsResizing = false;
-  @Input() direction: DIDAR_TABLE_DIRECTION = DIDAR_TABLE_DIRECTION.RTL;
+  @Input() direction: 'rtl' | 'ltr' = 'rtl';
 
   @Output() sortChange = new EventEmitter()
   @Output() rowsReordered: EventEmitter<any[]> = new EventEmitter();
@@ -205,7 +200,7 @@ export class DidarTableComponent implements OnInit, OnChanges, AfterViewInit {
 
   private initializeScrollPosition(): void {
     setTimeout(() => {
-      const tableWrapper = this._elementRef.nativeElement.querySelector('.table-wrapper');
+      const tableWrapper = this._elementRef.nativeElement.querySelector('.table');
       if (tableWrapper) {
         if (this.direction === 'rtl') {
           tableWrapper.scrollLeft = tableWrapper.scrollWidth;
